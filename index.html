@@ -5,45 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>You Smell</title>
     <style>
+        /* Color scheme */
+        :root {
+            --dark-blue: #0D1B2A;
+            --navy-blue: #1B263B;
+            --steel-blue: #415A77;
+            --light-blue: #778DA9;
+            --off-white: #E0E1DD;
+        }
+
         body {
             background: url('tristan.png') no-repeat center center fixed;
             background-size: cover;
-            color: #ffffff;
+            color: var(--off-white);
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
         }
+
         .container {
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            background-color: rgba(42, 42, 42, 0.8);
+            background-color: rgba(27, 38, 59, 0.9); /* Slightly transparent navy */
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
+
         h1 {
-            color: #3498db;
+            color: var(--light-blue);
         }
+
         p {
             font-size: 18px;
+            color: var(--off-white);
         }
+
         .footer {
             margin-top: 20px;
             font-size: 14px;
-            color: #888;
+            color: var(--light-blue);
         }
+
+        /* Button styling */
         .button {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
+            margin-top: 15px;
+            padding: 12px 24px;
             font-size: 16px;
-            color: #ffffff;
-            background-color: #3498db;
-            border: none;
+            font-weight: bold;
+            color: var(--off-white);
+            background-color: var(--steel-blue);
+            border: 2px solid var(--light-blue);
             border-radius: 5px;
             text-decoration: none;
-            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        /* Hover animation */
+        .button:hover {
+            background-color: var(--light-blue);
+            color: var(--dark-blue);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px var(--light-blue);
+        }
+
+        /* Button container */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -53,10 +87,13 @@
         <p>Tristan likes men</p>
         <p>Tristan is FAT</p>
         <p>Never contact me bro</p>
-        <a href="https://chrlzschat.onrender.com" class="button">Visit The Chat (50s load time)</a>
-        <!-- New button linking to GitHub -->
-        <a href="https://github.com/ch-rlzs" class="button">My Hub</a>
-        <a href="https://chat.chrlzs.fun/" class="button">About The Chat</a>
+
+        <div class="button-container">
+            <a href="https://chrlzschat.onrender.com" class="button">Visit The Chat (50s load time)</a>
+            <a href="https://github.com/ch-rlzs" class="button">My Hub</a>
+            <a href="https://chat.chrlzs.fun/" class="button">About The Chat</a>
+        </div>
+
         <div class="footer">&copy; 2025 chrlzs . no rights reserved.</div>
     </div>
 </body>
