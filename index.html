@@ -18,21 +18,21 @@
             background-color: var(--dark-blue);
             color: var(--off-white);
             font-family: 'Courier New', monospace;
-            text-align: center;
             margin: 0;
             padding: 0;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            transition: background 1s ease-in-out;
         }
 
         .container {
             width: 90%;
             max-width: 600px;
             padding: 20px;
-            background-color: var(#000000);
+            background-color: var(--navy-blue);
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             text-align: center;
@@ -55,6 +55,9 @@
             white-space: pre-wrap;
             border-left: 4px solid var(--light-blue);
             box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
         .input-line {
@@ -102,11 +105,17 @@
             font-size: 14px;
             color: var(--light-blue);
         }
+        
+        /* Background image transition */
+        .tristan-mode {
+            background: url('tristan.png') no-repeat center center fixed !important;
+            background-size: cover !important;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Console</h1>
+        <h1>Interactive Console</h1>
         
         <div class="console" id="console">
             <div class="input-line">
@@ -128,13 +137,18 @@
         consoleInput.addEventListener("keydown", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
-                const userInput = consoleInput.value.trim();
+                const userInput = consoleInput.value.trim().toLowerCase();
                 if (userInput) {
                     const newLine = document.createElement("div");
                     newLine.textContent = "> " + userInput;
                     consoleElement.insertBefore(newLine, consoleElement.lastChild);
                     consoleInput.value = "";
                     consoleElement.scrollTop = consoleElement.scrollHeight;
+
+                    // Easter Egg: If user types "tristan", change background
+                    if (userInput === "tristan") {
+                        document.body.classList.add("tristan-mode");
+                    }
                 }
             }
         });
