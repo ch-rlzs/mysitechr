@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        /* Color scheme */
+        :root {
+            --dark-blue: #0D1B2A;
+            --navy-blue: #1B263B;
+            --steel-blue: #415A77;
+            --light-blue: #778DA9;
+            --off-white: #E0E1DD;
+        }
+
+        body {
+            background: url('404.png') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--off-white);
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 30px;
+            background-color: rgba(27, 38, 59, 0.9);
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            font-size: 48px;
+            color: var(--light-blue);
+        }
+
+        p {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--off-white);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--off-white);
+            background-color: var(--steel-blue);
+            border: 2px solid var(--light-blue);
+            border-radius: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: var(--light-blue);
+            color: var(--dark-blue);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px var(--light-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <p>Bruh, this page doesn't exist.</p>
+        <p>Maybe you got lost in the void?</p>
+        <a href="/" class="button">Take Me Home</a>
+    </div>
+</body>
+</html>
