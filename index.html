@@ -7,54 +7,90 @@
     <style>
         /* Color scheme */
         :root {
-            --dark-blue: #0D1B2A;
-            --navy-blue: #1B263B;
-            --steel-blue: #415A77;
-            --light-blue: #778DA9;
-            --off-white: #E0E1DD;
+            --dark-bg: #121212;
+            --dark-card: #1E1E1E;
+            --primary-blue: #6dcff6;
+            --text-light: #ffffff;
+            --text-gray: #a0a0a0;
+            --border-gray: #323232;
+            --hover-blue: #64b3d9;
         }
 
+        /* Global styles */
         body {
-            background-color: var(--dark-blue);
-            color: var(--off-white);
-            font-family: 'Courier New', monospace;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Century Gothic', sans-serif;
             margin: 0;
             padding: 0;
             height: 100vh;
+            width: 100vw;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: background 1s ease-in-out;
         }
 
+        /* Navigation bar */
+        .navbar {
+            width: 100%;
+            position: absolute;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+
+        .navbar .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+        }
+
+        .navbar .nav-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .navbar .nav-links a:hover {
+            color: var(--hover-blue);
+        }
+
+        /* Console section */
         .container {
             width: 90%;
-            max-width: 600px;
-            padding: 20px;
-            background-color: var(--navy-blue);
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            max-width: 800px;
+            padding: 40px;
+            background-color: var(--dark-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             text-align: center;
+            margin-top: 80px;
         }
 
         h1 {
             font-size: 28px;
-            color: var(--light-blue);
+            color: var(--primary-blue);
+            text-transform: uppercase;
         }
 
         .console {
             width: 100%;
-            height: 200px;
-            background-color: var(--steel-blue);
-            padding: 10px;
-            border-radius: 5px;
+            height: 250px;
+            background-color: var(--dark-bg);
+            padding: 12px;
+            border-radius: 8px;
             text-align: left;
             overflow-y: auto;
             font-size: 16px;
-            white-space: pre-wrap;
-            border-left: 4px solid var(--light-blue);
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+            border-left: 4px solid var(--primary-blue);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
@@ -66,54 +102,68 @@
         }
 
         .input-line span {
-            color: var(--light-blue);
+            color: var(--primary-blue);
         }
 
         .console-input {
             background: none;
             border: none;
-            color: var(--off-white);
+            color: var(--text-light);
             font-family: 'Courier New', monospace;
             font-size: 16px;
             width: 100%;
             outline: none;
         }
 
+        /* Buttons */
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
         .button {
-            display: inline-block;
-            margin-top: 15px;
             padding: 12px 24px;
             font-size: 16px;
             font-weight: bold;
-            color: var(--off-white);
-            background-color: var(--steel-blue);
-            border: 2px solid var(--light-blue);
-            border-radius: 5px;
+            color: var(--text-light);
+            background-color: var(--primary-blue);
+            border: none;
+            border-radius: 6px;
             text-decoration: none;
             transition: all 0.3s ease;
         }
 
         .button:hover {
-            background-color: var(--light-blue);
-            color: var(--dark-blue);
+            background-color: var(--hover-blue);
             transform: scale(1.1);
-            box-shadow: 0 0 10px var(--light-blue);
+            box-shadow: 0 0 12px var(--hover-blue);
         }
 
+        /* Footer */
         .footer {
-            margin-top: 20px;
+            margin-top: 25px;
             font-size: 14px;
-            color: var(--light-blue);
+            color: var(--text-gray);
         }
-        
-        /* Background image transition */
-        .tristan-mode {
-            background: url('tristan.png') no-repeat center center fixed !important;
-            background-size: cover !important;
-        }
+
     </style>
 </head>
 <body>
+
+    <!-- Navigation -->
+    <div class="navbar">
+        <div class="logo">Eagle Wing</div>
+        <div class="nav-links">
+            <a href="#">Our Work</a>
+            <a href="#">Services</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
     <div class="container">
         <h1>Interactive Console</h1>
         
@@ -123,9 +173,11 @@
             </div>
         </div>
 
-        <a href="https://chrlzschat.onrender.com" class="button">Visit The Chat</a>
-        <a href="https://github.com/ch-rlzs" class="button">My Hub</a>
-        <a href="https://chat.chrlzs.fun/" class="button">About The Chat</a>
+        <div class="buttons">
+            <a href="https://chrlzschat.onrender.com" class="button">Visit The Chat</a>
+            <a href="https://github.com/ch-rlzs" class="button">My Hub</a>
+            <a href="https://chat.chrlzs.fun/" class="button">About The Chat</a>
+        </div>
 
         <div class="footer">&copy; 2025 chrlzs . no rights reserved.</div>
     </div>
@@ -144,14 +196,10 @@
                     consoleElement.insertBefore(newLine, consoleElement.lastChild);
                     consoleInput.value = "";
                     consoleElement.scrollTop = consoleElement.scrollHeight;
-
-                    // Easter Egg: If user types "tristan", change background
-                    if (userInput === "tristan") {
-                        document.body.classList.add("tristan-mode");
-                    }
                 }
             }
         });
     </script>
+
 </body>
 </html>
