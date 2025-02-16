@@ -18,7 +18,7 @@
             background: url('tristan.png') no-repeat center center fixed;
             background-size: cover;
             color: var(--off-white);
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', monospace; /* Terminal-like font */
             text-align: center;
             margin: 0;
             padding: 0;
@@ -28,12 +28,13 @@
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
-            background-color: rgba(27, 38, 59, 0.9); /* Slightly transparent navy */
+            background-color: rgba(27, 38, 59, 0.9);
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
 
         h1 {
+            font-size: 32px;
             color: var(--light-blue);
         }
 
@@ -46,6 +47,32 @@
             margin-top: 20px;
             font-size: 14px;
             color: var(--light-blue);
+        }
+
+        /* Terminal text animation */
+        .terminal {
+            font-size: 20px;
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            border-left: 4px solid var(--light-blue);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            background-color: var(--light-blue);
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
         }
 
         /* Button styling */
@@ -88,6 +115,11 @@
         <p>Tristan is FAT</p>
         <p>Never contact me bro</p>
 
+        <!-- Terminal-style typing effect -->
+        <div class="terminal">
+            <span id="typing-text"></span><span class="cursor">&nbsp;</span>
+        </div>
+
         <div class="button-container">
             <a href="https://chrlzschat.onrender.com" class="button">Visit The Chat (50s load time)</a>
             <a href="https://github.com/ch-rlzs" class="button">My Hub</a>
@@ -96,5 +128,42 @@
 
         <div class="footer">&copy; 2025 chrlzs . no rights reserved.</div>
     </div>
+
+    <script>
+        const text = [
+            "Connecting to server...",
+            "Fetching secrets...",
+            "Compiling roast files...",
+            "ERROR 404: Tristan's diet plan not found"
+        ];
+
+        let index = 0;
+        let charIndex = 0;
+        const speed = 100;
+        const typingElement = document.getElementById("typing-text");
+
+        function typeText() {
+            if (charIndex < text[index].length) {
+                typingElement.innerHTML += text[index].charAt(charIndex);
+                charIndex++;
+                setTimeout(typeText, speed);
+            } else {
+                setTimeout(eraseText, 1500);
+            }
+        }
+
+        function eraseText() {
+            if (charIndex > 0) {
+                typingElement.innerHTML = text[index].substring(0, charIndex - 1);
+                charIndex--;
+                setTimeout(eraseText, speed / 2);
+            } else {
+                index = (index + 1) % text.length;
+                setTimeout(typeText, 500);
+            }
+        }
+
+        setTimeout(typeText, 1000);
+    </script>
 </body>
 </html>
