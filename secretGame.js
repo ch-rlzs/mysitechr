@@ -5,7 +5,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let score = 0;
     let timeLeft = 10;
     let timer;
-    
+    let comboCounter = 0;
+    let lastClickTime = 0;
+    let powerUpActive = false;
+
     const titleElement = document.querySelector("h1");
     if (!titleElement) {
         console.error("No h1 element found for secret activation.");
@@ -13,9 +16,22 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     titleElement.style.cursor = "pointer";
 
-    titleElement.addEventListener("click", function () {
+    // Visual feedback for secret activation
+    titleElement.addEventListener("click", function (e) {
         clickCount++;
         clearTimeout(clickTimer);
+
+        // Add visual feedback
+        const feedback = document.createElement("div");
+        feedback.textContent = `${5 - clickCount} more clicks`;
+        feedback.style.position = "absolute";
+        feedback.style.left = `${e.clientX + 10}px`;
+        feedback.style.top = `${e.clientY + 10}px`;
+        feedback.style.color = "var(--light-blue)";
+        feedback.style.fontSize = "14px";
+        document.body.appendChild(feedback);
+        setTimeout(() => feedback.remove(), 1000);
+
         if (clickCount >= 5) {
             clickCount = 0;
             showGameMenu();
@@ -46,6 +62,8 @@ document.addEventListener("DOMContentLoaded", function () {
         gameActive = true;
         score = 0;
         timeLeft = 10;
+        comboCounter = 0;
+        lastClickTime = 0;
 
         // Remove old game if exists
         const existingGame = document.getElementById("gameContainer");
@@ -54,43 +72,53 @@ document.addEventListener("DOMContentLoaded", function () {
         // Create game container
         const gameContainer = document.createElement("div");
         gameContainer.id = "gameContainer";
-        gameContainer.style.position = "fixed";
-        gameContainer.style.top = "50%";
-        gameContainer.style.left = "50%";
-        gameContainer.style.transform = "translate(-50%, -50%)";
-        gameContainer.style.background = "rgba(27, 38, 59, 0.9)";
-        gameContainer.style.padding = "20px";
-        gameContainer.style.borderRadius = "10px";
-        gameContainer.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.5)";
-        gameContainer.style.textAlign = "center";
-        gameContainer.style.zIndex = "1000";
+        gameContainer.classList.add("game-container"); // Use CSS class for styling
 
         const scoreText = document.createElement("p");
         scoreText.textContent = "Score: 0";
-        scoreText.style.color = "var(--off-white)";
-        scoreText.style.fontSize = "18px";
+        scoreText.classList.add("game-text");
 
         const timeText = document.createElement("p");
         timeText.textContent = "Time: 10s";
-        timeText.style.color = "var(--light-blue)";
-        timeText.style.fontSize = "16px";
+        timeText.classList.add("game-text");
+
+        const comboText = document.createElement("p");
+        comboText.textContent = "Combo: 0x";
+        comboText.classList.add("game-text");
 
         const clickButton = document.createElement("button");
         clickButton.textContent = "Click Me!";
-        clickButton.style.padding = "10px 20px";
-        clickButton.style.marginTop = "10px";
-        clickButton.style.fontSize = "16px";
-        clickButton.style.cursor = "pointer";
-        clickButton.style.backgroundColor = "var(--steel-blue)";
-        clickButton.style.color = "var(--off-white)";
-        clickButton.style.border = "none";
-        clickButton.style.borderRadius = "5px";
-        clickButton.style.transition = "0.3s";
-        clickButton.addEventListener("mouseover", () => clickButton.style.transform = "scale(1.1)");
-        clickButton.addEventListener("mouseout", () => clickButton.style.transform = "scale(1)");
+        clickButton.classList.add("game-button");
+
+        // Power-up indicator
+        const powerUpText = document.createElement("p");
+        powerUpText.textContent = "Power-Up: None";
+        powerUpText.classList.add("game-text");
+
+        // Click button logic
         clickButton.addEventListener("click", function () {
-            score++;
+            const now = Date.now();
+            if (now - lastClickTime < 500) { // 0.5s combo window
+                comboCounter++;
+            } else {
+                comboCounter = 0;
+            }
+            lastClickTime = now;
+
+            // Apply power-up effects
+            if (powerUpActive) {
+                score += 2; // Double points
+            } else {
+                score++;
+            }
+
             scoreText.textContent = "Score: " + score;
+            comboText.textContent = "Combo: " + comboCounter + "x";
+
+            // Check for power-up
+            if (score % 5 === 0 && !powerUpActive) {
+                activatePowerUp();
+            }
         });
 
         // Countdown Timer
@@ -108,8 +136,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         gameContainer.appendChild(scoreText);
         gameContainer.appendChild(timeText);
+        gameContainer.appendChild(comboText);
+        gameContainer.appendChild(powerUpText);
         gameContainer.appendChild(clickButton);
         document.body.appendChild(gameContainer);
+    }
+
+    function activatePowerUp() {
+        powerUpActive = true;
+        const powerUpText = document.querySelector("#gameContainer .game-text:nth-child(4)");
+        powerUpText.textContent = "Power-Up: 2x Points!";
+        setTimeout(() => {
+            powerUpActive = false;
+            powerUpText.textContent = "Power-Up: None";
+        }, 3000); // Power-up lasts 3 seconds
     }
 
     function stopGame() {
@@ -130,9 +170,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function saveScore(score) {
+        const name = prompt("Enter your name for the leaderboard:");
+        const entry = {
+            name: name || "Anonymous",
+            score: score,
+            date: new Date().toLocaleDateString()
+        };
+
         let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
-        leaderboard.push(score);
-        leaderboard.sort((a, b) => b - a);
+        leaderboard.push(entry);
+        leaderboard.sort((a, b) => b.score - a.score);
         leaderboard = leaderboard.slice(0, 5); // Keep top 5 scores
         localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
     }
@@ -145,8 +192,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         let message = "Leaderboard:\n";
-        leaderboard.forEach((score, index) => {
-            message += `${index + 1}. ${score}\n`;
+        leaderboard.forEach((entry, index) => {
+            message += `${index + 1}. ${entry.name} - ${entry.score} (${entry.date})\n`;
         });
 
         alert(message);
