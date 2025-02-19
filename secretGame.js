@@ -2,7 +2,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let clickCount = 0;
     let clickTimer = null;
     let gameActive = false;
-
+    let score = 0;
+    let timeLeft = 10;
+    let timer;
+    
     const titleElement = document.querySelector("h1");
     if (!titleElement) {
         console.error("No h1 element found for secret activation.");
@@ -12,34 +15,45 @@ document.addEventListener("DOMContentLoaded", function () {
 
     titleElement.addEventListener("click", function () {
         clickCount++;
-        console.log("Click count: " + clickCount);
         clearTimeout(clickTimer);
         if (clickCount >= 5) {
             clickCount = 0;
-            startSecretPrompt();
+            showGameMenu();
         } else {
-            // Reset count if 3 seconds pass between clicks
             clickTimer = setTimeout(() => {
                 clickCount = 0;
             }, 3000);
         }
     });
 
-    function startSecretPrompt() {
-        let userInput = prompt("Enter the secret code to unlock the game:");
-        if (userInput && userInput.toLowerCase() === "chrlzs") {
-            launchGame();
-        } else {
-            alert("Wrong code! Try again.");
-        }
+    function showGameMenu() {
+        let choice = prompt(
+            "Secret Game Menu:\n\n1 - Start Game\n2 - Stop Game\n3 - Restart Game\n4 - View Leaderboard"
+        );
+
+        if (choice === "1") startGame();
+        else if (choice === "2") stopGame();
+        else if (choice === "3") restartGame();
+        else if (choice === "4") showLeaderboard();
+        else alert("Invalid option. Try again.");
     }
 
-    function launchGame() {
-        if (gameActive) return;
+    function startGame() {
+        if (gameActive) {
+            alert("Game is already running!");
+            return;
+        }
         gameActive = true;
+        score = 0;
+        timeLeft = 10;
+
+        // Remove old game if exists
+        const existingGame = document.getElementById("gameContainer");
+        if (existingGame) existingGame.remove();
 
         // Create game container
         const gameContainer = document.createElement("div");
+        gameContainer.id = "gameContainer";
         gameContainer.style.position = "fixed";
         gameContainer.style.top = "50%";
         gameContainer.style.left = "50%";
@@ -50,9 +64,6 @@ document.addEventListener("DOMContentLoaded", function () {
         gameContainer.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.5)";
         gameContainer.style.textAlign = "center";
         gameContainer.style.zIndex = "1000";
-
-        let score = 0;
-        let timeLeft = 10;
 
         const scoreText = document.createElement("p");
         scoreText.textContent = "Score: 0";
@@ -83,15 +94,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Countdown Timer
-        const timer = setInterval(function () {
+        timer = setInterval(function () {
             timeLeft--;
             timeText.textContent = "Time: " + timeLeft + "s";
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 clickButton.disabled = true;
                 alert("Time's up! Your final score: " + score);
-                document.body.removeChild(gameContainer);
-                gameActive = false;
+                saveScore(score);
+                stopGame();
             }
         }, 1000);
 
@@ -99,5 +110,45 @@ document.addEventListener("DOMContentLoaded", function () {
         gameContainer.appendChild(timeText);
         gameContainer.appendChild(clickButton);
         document.body.appendChild(gameContainer);
+    }
+
+    function stopGame() {
+        const gameContainer = document.getElementById("gameContainer");
+        if (gameContainer) {
+            gameContainer.remove();
+            clearInterval(timer);
+            gameActive = false;
+            alert("Game stopped.");
+        } else {
+            alert("No game is running!");
+        }
+    }
+
+    function restartGame() {
+        stopGame();
+        startGame();
+    }
+
+    function saveScore(score) {
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        leaderboard.push(score);
+        leaderboard.sort((a, b) => b - a);
+        leaderboard = leaderboard.slice(0, 5); // Keep top 5 scores
+        localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+    }
+
+    function showLeaderboard() {
+        let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
+        if (leaderboard.length === 0) {
+            alert("No scores recorded yet!");
+            return;
+        }
+
+        let message = "Leaderboard:\n";
+        leaderboard.forEach((score, index) => {
+            message += `${index + 1}. ${score}\n`;
+        });
+
+        alert(message);
     }
 });
