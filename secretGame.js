@@ -1,15 +1,27 @@
 document.addEventListener("DOMContentLoaded", function () {
-    let secretCode = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
-    let inputSequence = [];
+    let clickCount = 0;
+    let clickTimer = null;
     let gameActive = false;
 
-    // Listen for keypresses
-    document.addEventListener("keydown", function (event) {
-        inputSequence.push(event.key);
-        inputSequence = inputSequence.slice(-secretCode.length); // Keep only the last inputs
+    const titleElement = document.querySelector("h1");
+    if (!titleElement) {
+        console.error("No h1 element found for secret activation.");
+        return;
+    }
+    titleElement.style.cursor = "pointer";
 
-        if (inputSequence.join("") === secretCode.join("")) {
+    titleElement.addEventListener("click", function () {
+        clickCount++;
+        console.log("Click count: " + clickCount);
+        clearTimeout(clickTimer);
+        if (clickCount >= 5) {
+            clickCount = 0;
             startSecretPrompt();
+        } else {
+            // Reset count if 3 seconds pass between clicks
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+            }, 3000);
         }
     });
 
