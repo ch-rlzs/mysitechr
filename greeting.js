@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const messages = {
         morning: ["Good morning! Did you sleep, or just blink?", "Rise and shine! Or just rise, that's fine too.", "Another day, another chance to Google everything."],
-        afternoon: ["Good afternoon! Hope your lunch was better than my coding skills.", "Still working? I admire your persistence.", "It’s the perfect time for a nap, just saying."],
+        afternoon: ["Good afternoon! Hope your lunch was better than mine.", "Take a lunch break.", "Bro go take a nap."],
         evening: ["Good evening! Almost bedtime, or just more screen time?", "It’s getting late... but that’s a problem for future you.", "Moon’s up. Are you?"],
         night: ["Late night browsing, huh? Respect.", "The internet never sleeps, and apparently, neither do you.", "Is it too late for productivity or too early for sleep?"]
     };
