@@ -21,10 +21,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const randomMessage = messages[timeOfDay][Math.floor(Math.random() * messages[timeOfDay].length)];
 
-    const greetingElement = document.createElement("h2");
+    const greetingElement = document.createElement("p");
     greetingElement.textContent = randomMessage;
-    greetingElement.style.color = "var(--light-blue)";
-    greetingElement.style.marginBottom = "10px";
+    greetingElement.style.color = "var(--off-white)";
+    greetingElement.style.fontSize = "14px";
+    greetingElement.style.marginTop = "-10px"; // Slight adjustment for spacing
 
-    document.querySelector(".container").prepend(greetingElement);
+    document.querySelector("h1").insertAdjacentElement("afterend", greetingElement);
 });
