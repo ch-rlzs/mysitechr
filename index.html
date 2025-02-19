@@ -1,154 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You Smell</title>
-    <style>
-        :root {
-            --dark-blue: #0D1B2A;
-            --navy-blue: #1B263B;
-            --steel-blue: #415A77;
-            --light-blue: #778DA9;
-            --off-white: #E0E1DD;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You Smell</title>
+  <!-- Import Fira Code from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <!-- Import particles.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <style>
+    :root {
+      --dark-blue: #0D1B2A;
+      --navy-blue: #1B263B;
+      --steel-blue: #415A77;
+      --light-blue: #778DA9;
+      --off-white: #E0E1DD;
+    }
 
-        body {
-            background-color: var(--dark-blue);
-            color: var(--off-white);
-            font-family: 'Courier New', monospace;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
+    body {
+      background-color: var(--dark-blue);
+      color: var(--off-white);
+      font-family: 'Fira Code', monospace;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
 
-        .dropdown {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
+    /* Ensure your main content sits above the particle background */
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: rgba(27, 38, 59, 0.9);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+      position: relative;
+      z-index: 1;
+    }
 
-        .hamburger {
-            cursor: pointer;
-            padding: 10px;
-            background: transparent;
-            border-radius: 5px;
-            border: 1px solid transparent;
-            transition: all 0.3s ease;
-        }
+    .dropdown {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+    }
 
-        .hamburger:hover {
-            box-shadow: 0 0 10px var(--light-blue);
-        }
+    .hamburger {
+      cursor: pointer;
+      padding: 10px;
+      background: transparent;
+      border-radius: 5px;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
 
-        .hamburger-line {
-            display: block;
-            width: 25px;
-            height: 3px;
-            background-color: var(--off-white);
-            margin: 4px 0;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
+    .hamburger:hover {
+      box-shadow: 0 0 10px var(--light-blue);
+    }
 
-        .hamburger.active .hamburger-line:nth-child(1) {
-            transform: translateY(7px) rotate(45deg);
-        }
+    .hamburger-line {
+      display: block;
+      width: 25px;
+      height: 3px;
+      background-color: var(--off-white);
+      margin: 4px 0;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
 
-        .hamburger.active .hamburger-line:nth-child(2) {
-            opacity: 0;
-        }
+    .hamburger.active .hamburger-line:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
 
-        .hamburger.active .hamburger-line:nth-child(3) {
-            transform: translateY(-7px) rotate(-45deg);
-        }
+    .hamburger.active .hamburger-line:nth-child(2) {
+      opacity: 0;
+    }
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            left: 0;
-            top: 100%;
-            background-color: var(--navy-blue);
-            min-width: 160px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
+    .hamburger.active .hamburger-line:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
 
-        .dropdown-content.active {
-            display: block;
-        }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      left: 0;
+      top: 100%;
+      background-color: var(--navy-blue);
+      min-width: 160px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
 
-        .dropdown-content a {
-            color: var(--off-white);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: all 0.3s ease;
-        }
+    .dropdown-content.active {
+      display: block;
+    }
 
-        .dropdown-content a:hover {
-            background-color: var(--steel-blue);
-            padding-left: 20px;
-        }
+    .dropdown-content a {
+      color: var(--off-white);
+      padding: 12px 16px;
+      text-decoration: none;
+      display: block;
+      transition: all 0.3s ease;
+    }
 
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
-            padding: 20px;
-            background-color: rgba(27, 38, 59, 0.9);
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-        }
+    .dropdown-content a:hover {
+      background-color: var(--steel-blue);
+      padding-left: 20px;
+    }
 
-        h1 {
-            color: var(--light-blue);
-        }
+    h1 {
+      color: var(--light-blue);
+    }
 
-        p {
-            font-size: 18px;
-            color: var(--off-white);
-        }
+    p {
+      font-size: 18px;
+      color: var(--off-white);
+    }
 
-        .footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: var(--light-blue);
-        }
-
-     
-    </style>
+    .footer {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--light-blue);
+    }
+  </style>
 </head>
 <body>
-    <div class="dropdown">
-        <div class="hamburger">
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-            <span class="hamburger-line"></span>
-        </div>
-        <div class="dropdown-content">
-            <a href="https://chrlzschat.onrender.com">Chat(long load time)</a>
-            <a href="https://github.com/ch-rlzs">My GitHub</a>
-            <a href="https://chat.chrlzs.fun/">About Chat</a>
-        </div>
+  <!-- Particle Background Container -->
+  <div id="particles-js" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
+
+  <div class="dropdown">
+    <div class="hamburger">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
     </div>
-
-    <div class="container">
-        <h1>Chrlzs</h1>
-        <p>What brings you here?</p>
-        <p>If you have a plan B, forget plan A</p>
-        <p>bope. -chrlzs</p>
-
-        <div class="footer">&copy; 2025 chrlzs . all rights reserved.</div>
+    <div class="dropdown-content">
+      <a href="https://chrlzschat.onrender.com">Chat(long load time)</a>
+      <a href="https://github.com/ch-rlzs">My GitHub</a>
+      <a href="https://chat.chrlzs.fun/">About Chat</a>
     </div>
+  </div>
 
-    <script src="dropdown.js"></script>
+  <div class="container">
+    <h1>Chrlzs</h1>
+    <p>What brings you here?</p>
+    <p>If you have a plan B, forget plan A</p>
+    <p>bope. -chrlzs</p>
+    <div class="footer">&copy; 2025 chrlzs . all rights reserved.</div>
+  </div>
+
+  <script src="dropdown.js"></script>
+  <script>
+    /* Initialize particles.js */
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {
+          "value": 50,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#ffffff"
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          },
+          "polygon": {
+            "nb_sides": 5
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false,
+          "anim": {
+            "enable": false
+          }
+        },
+        "size": {
+          "value": 3,
+          "random": true,
+          "anim": {
+            "enable": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#ffffff",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 6,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "attract": {
+            "enable": false
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "repulse"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 400,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "bubble": {
+            "distance": 400,
+            "size": 40,
+            "duration": 2,
+            "opacity": 8
+          },
+          "repulse": {
+            "distance": 200
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
 </body>
 </html>
