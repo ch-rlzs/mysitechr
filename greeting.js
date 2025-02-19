@@ -25,7 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
     greetingElement.textContent = randomMessage;
     greetingElement.style.color = "var(--off-white)";
     greetingElement.style.fontSize = "14px";
-    greetingElement.style.marginTop = "-10px"; // Slight adjustment for spacing
+    greetingElement.style.marginTop = "5px";  
+    greetingElement.style.fontWeight = "lighter"; 
+    greetingElement.style.textAlign = "center"; 
 
-    document.querySelector("h1").insertAdjacentElement("afterend", greetingElement);
+    const titleElement = document.querySelector("h1");
+    titleElement.insertAdjacentElement("afterend", greetingElement);
 });
