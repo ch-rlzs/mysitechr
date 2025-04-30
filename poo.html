@@ -22,29 +22,68 @@
             text-align: center;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
+            width: 90%;
             padding: 30px;
-            background-color: transparent;
+            background-color: rgba(13, 27, 42, 0.8); /* Semi-transparent dark background */
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            margin: 40px 0;
         }
 
         h1 {
             font-size: 48px;
             color: var(--off-white);
+            margin-bottom: 20px;
         }
 
-        p {
-            font-size: 10px;
+        .intro-text {
+            font-size: 16px;
             margin-bottom: 20px;
-            color: var(--Black);
+            color: var(--off-white);
+        }
+
+        .content-section {
+            text-align: left;
+            margin-bottom: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--light-blue) var(--navy-blue);
+        }
+
+        .content-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-section::-webkit-scrollbar-track {
+            background: var(--navy-blue);
+            border-radius: 4px;
+        }
+
+        .content-section::-webkit-scrollbar-thumb {
+            background-color: var(--light-blue);
+            border-radius: 4px;
+        }
+
+        .content-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: var(--off-white);
+            text-align: justify;
+            text-indent: 20px;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            hyphens: auto;
         }
 
         .button {
@@ -58,6 +97,7 @@
             border-radius: 5px;
             text-decoration: none;
             transition: all 0.3s ease;
+            margin-top: 20px;
         }
 
         .button:hover {
@@ -66,23 +106,50 @@
             transform: scale(1.1);
             box-shadow: 0 0 10px var(--light-blue);
         }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                width: 95%;
+            }
+            
+            h1 {
+                font-size: 36px;
+            }
+            
+            .content-section {
+                max-height: 350px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>POO</h1>
-            <p>poo.</p>
-        <p>poop?</p>
-        <p>The biological waste product commonly known as "poo" or feces represents one of the most universal yet often socially taboo aspects of human and animal physiology, serving as the end result of the digestive process whereby nutrients from consumed food are extracted and the remaining material is expelled from the body. This complex substance plays a critical role not only in basic biological function but also serves as a valuable diagnostic tool and research medium across multiple scientific disciplines.
-Feces is composed primarily of water (approximately 75%), with the remaining solid content consisting of undigested food particles, bacterial biomass comprising roughly 30% of solids, dead epithelial cells shed from the intestinal lining, bile pigments that give it its characteristic brown coloration, various proteins, fats, and inorganic substances. The composition varies considerably depending on diet, health status, gut microbiome composition, and hydration levels of the organism. Plant-based diets typically result in bulkier, fiber-rich feces, while animal protein-heavy diets often produce smaller, denser, and stronger-smelling waste.
-The Bristol Stool Chart, developed at the University of Bristol, categorizes human feces into seven distinct types ranging from separate hard lumps to entirely liquid, providing a diagnostic tool for healthcare professionals to assess gastrointestinal function and potential disorders. Type 1 and 2 indicate constipation, types 3 and 4 are considered ideal, while types 5 through 7 suggest increasing degrees of diarrhea or intestinal upset. This classification system has become standard in clinical settings for describing stool consistency and tracking changes in patient digestive health.
-The color of feces provides valuable diagnostic information. The standard brown coloration comes primarily from stercobilin and urobilin, breakdown products of bilirubin derived from hemoglobin in red blood cells. Variations in color can indicate specific health conditions: black or tarry stools may suggest upper gastrointestinal bleeding; clay-colored or white stools often indicate bile duct obstruction; yellow stools can result from malabsorption disorders; while red streaking might indicate lower intestinal bleeding or hemorrhoids.
-The human gut microbiome, comprising trillions of bacteria representing hundreds of species, plays a pivotal role in shaping fecal composition. These microorganisms contribute significantly to fecal bulk while performing essential functions in the breakdown of complex carbohydrates, synthesis of vitamins, and protection against pathogenic organisms. The study of gut microbiota has revolutionized our understanding of human health, with research linking microbiome composition to conditions ranging from inflammatory bowel disease and diabetes to obesity and even neurological disorders.
-Beyond its role in waste elimination, the scientific study of feces—known as scatology—has become increasingly important across diverse fields. In medicine, comprehensive stool analysis can detect parasitic infections, occult blood, inflammatory markers, and digestive enzyme deficiencies. The emerging field of fecal microbiota transplantation has shown remarkable success in treating recurrent Clostridioides difficile infections by restoring healthy bacterial balance in the recipient's gut, with ongoing research exploring applications for other gastrointestinal disorders.
-In environmental science and wildlife biology, animal scat serves as a non-invasive biological sample that allows researchers to study population dynamics, territorial behaviors, dietary patterns, and the presence of environmental toxins without disturbing the animals themselves. Conservation biologists routinely collect and analyze fecal samples to monitor endangered species and assess ecosystem health, developing increasingly sophisticated DNA analysis techniques that can identify individual animals and their genetic relationships.
-Paleontologists study fossilized feces, known as coprolites, which provide remarkable insights into ancient ecosystems and dietary practices. These preserved specimens, which can date back millions of years, contain plant fragments, bone remnants, and other materials that reveal the feeding habits of extinct species and help reconstruct prehistoric food webs. Some notable coprolite discoveries have included evidence of parasitic infections in ancient populations and previously unknown dietary practices of prehistoric humans.
-The cultural attitudes toward feces vary dramatically across societies and historical periods. While modern Western cultures typically maintain strong taboos around discussion or display of excrement, other cultures have incorporated it more openly into agricultural practices, traditional medicine, and even ritualistic contexts. The development of modern sanitation systems represents one of humanity's most significant public health achievements, dramatically reducing the incidence of waterborne diseases that once decimated populations. However, approximately 2 billion people worldwide still lack access to basic sanitation facilities, highlighting ongoing global health inequities.
-The management of human waste presents significant environmental challenges in the modern world. Conventional wastewater treatment systems require substantial energy inputs and infrastructure investment, while producing various byproducts that must be safely processed. Innovative approaches include composting toilets that transform human waste into agricultural fertilizer, anaerobic digestion systems that generate biogas for energy production, and experimental technologies that extract valuable nutrients like phosphorus from sewage streams—recognizing that what we consider waste actually contains valuable resources that can be reclaimed through appropriate processing technologies. </p>
+        <p class="intro-text">poo.</p>
+        <p class="intro-text">poop?</p>
+        
+        <div class="content-section">
+            <p>The biological waste product commonly known as "poo" or feces represents one of the most universal yet often socially taboo aspects of human and animal physiology, serving as the end result of the digestive process whereby nutrients from consumed food are extracted and the remaining material is expelled from the body. This complex substance plays a critical role not only in basic biological function but also serves as a valuable diagnostic tool and research medium across multiple scientific disciplines.</p>
+            
+            <p>Feces is composed primarily of water (approximately 75%), with the remaining solid content consisting of undigested food particles, bacterial biomass comprising roughly 30% of solids, dead epithelial cells shed from the intestinal lining, bile pigments that give it its characteristic brown coloration, various proteins, fats, and inorganic substances. The composition varies considerably depending on diet, health status, gut microbiome composition, and hydration levels of the organism. Plant-based diets typically result in bulkier, fiber-rich feces, while animal protein-heavy diets often produce smaller, denser, and stronger-smelling waste.</p>
+            
+            <p>The Bristol Stool Chart, developed at the University of Bristol, categorizes human feces into seven distinct types ranging from separate hard lumps to entirely liquid, providing a diagnostic tool for healthcare professionals to assess gastrointestinal function and potential disorders. Type 1 and 2 indicate constipation, types 3 and 4 are considered ideal, while types 5 through 7 suggest increasing degrees of diarrhea or intestinal upset. This classification system has become standard in clinical settings for describing stool consistency and tracking changes in patient digestive health.</p>
+            
+            <p>The color of feces provides valuable diagnostic information. The standard brown coloration comes primarily from stercobilin and urobilin, breakdown products of bilirubin derived from hemoglobin in red blood cells. Variations in color can indicate specific health conditions: black or tarry stools may suggest upper gastrointestinal bleeding; clay-colored or white stools often indicate bile duct obstruction; yellow stools can result from malabsorption disorders; while red streaking might indicate lower intestinal bleeding or hemorrhoids.</p>
+            
+            <p>The human gut microbiome, comprising trillions of bacteria representing hundreds of species, plays a pivotal role in shaping fecal composition. These microorganisms contribute significantly to fecal bulk while performing essential functions in the breakdown of complex carbohydrates, synthesis of vitamins, and protection against pathogenic organisms. The study of gut microbiota has revolutionized our understanding of human health, with research linking microbiome composition to conditions ranging from inflammatory bowel disease and diabetes to obesity and even neurological disorders.</p>
+            
+            <p>Beyond its role in waste elimination, the scientific study of feces—known as scatology—has become increasingly important across diverse fields. In medicine, comprehensive stool analysis can detect parasitic infections, occult blood, inflammatory markers, and digestive enzyme deficiencies. The emerging field of fecal microbiota transplantation has shown remarkable success in treating recurrent Clostridioides difficile infections by restoring healthy bacterial balance in the recipient's gut, with ongoing research exploring applications for other gastrointestinal disorders.</p>
+            
+            <p>In environmental science and wildlife biology, animal scat serves as a non-invasive biological sample that allows researchers to study population dynamics, territorial behaviors, dietary patterns, and the presence of environmental toxins without disturbing the animals themselves. Conservation biologists routinely collect and analyze fecal samples to monitor endangered species and assess ecosystem health, developing increasingly sophisticated DNA analysis techniques that can identify individual animals and their genetic relationships.</p>
+            
+            <p>Paleontologists study fossilized feces, known as coprolites, which provide remarkable insights into ancient ecosystems and dietary practices. These preserved specimens, which can date back millions of years, contain plant fragments, bone remnants, and other materials that reveal the feeding habits of extinct species and help reconstruct prehistoric food webs. Some notable coprolite discoveries have included evidence of parasitic infections in ancient populations and previously unknown dietary practices of prehistoric humans.</p>
+            
+            <p>The cultural attitudes toward feces vary dramatically across societies and historical periods. While modern Western cultures typically maintain strong taboos around discussion or display of excrement, other cultures have incorporated it more openly into agricultural practices, traditional medicine, and even ritualistic contexts. The development of modern sanitation systems represents one of humanity's most significant public health achievements, dramatically reducing the incidence of waterborne diseases that once decimated populations. However, approximately 2 billion people worldwide still lack access to basic sanitation facilities, highlighting ongoing global health inequities.</p>
+            
+            <p>The management of human waste presents significant environmental challenges in the modern world. Conventional wastewater treatment systems require substantial energy inputs and infrastructure investment, while producing various byproducts that must be safely processed. Innovative approaches include composting toilets that transform human waste into agricultural fertilizer, anaerobic digestion systems that generate biogas for energy production, and experimental technologies that extract valuable nutrients like phosphorus from sewage streams—recognizing that what we consider waste actually contains valuable resources that can be reclaimed through appropriate processing technologies.</p>
+        </div>
         
         <a href="/" class="button">Take Me Home</a>
     </div>
