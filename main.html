@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>chrlzs@dedsec:~</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #00ffcc;
+      font-family: 'Fira Code', monospace;
+      margin: 0;
+      padding: 40px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .terminal {
+      max-width: 900px;
+      margin: auto;
+      border: 1px solid #00ffcc55;
+      padding: 20px;
+      background-color: #0f0f0f;
+      box-shadow: 0 0 20px #00ffcc33;
+      border-radius: 8px;
+      height: 80vh;
+      overflow-y: auto;
+    }
+
+    .prompt {
+      color: #00ffcc;
+      margin-bottom: 10px;
+    }
+
+    .file-list {
+      list-style: none;
+      padding-left: 20px;
+    }
+
+    .file-list li {
+      margin: 8px 0;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .file-list li:hover {
+      color: #ffffff;
+    }
+
+    .folder::before {
+      content: "📁 ";
+    }
+
+    .file::before {
+      content: "📄 ";
+    }
+
+    .output {
+      margin-top: 20px;
+      color: #00ffaa;
+      border-top: 1px dashed #00ffcc33;
+      padding-top: 10px;
+    }
+
+    .blinking-cursor {
+      display: inline-block;
+      width: 10px;
+      background-color: #00ffcc;
+      animation: blink 1s step-end infinite;
+      margin-left: 4px;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    a {
+      color: #00ffcc;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="terminal">
+    <div class="prompt">chrlzs@dedsec:~$ ls</div>
+    <ul class="file-list">
+      <li onclick="navigate('resume')"><span class="folder">resume/</span></li>
+      <li onclick="navigate('projects')"><span class="folder">projects/</span></li>
+      <li onclick="navigate('about')"><span class="folder">about/</span></li>
+      <li onclick="navigate('secret')"><span class="file">secret.txt</span></li>
+    </ul>
+
+    <div class="output" id="output"></div>
+
+    <div class="prompt" id="bottomPrompt">chrlzs@dedsec:~$<span class="blinking-cursor"></span></div>
+  </div>
+
+  <script>
+    function navigate(dir) {
+      const output = document.getElementById('output');
+      let message = '';
+
+      switch (dir) {
+        case 'resume':
+          message = 'Opening ./resume...\n<a href="/resume.html">Click to view resume</a>';
+          break;
+        case 'projects':
+          message = 'Opening ./projects...\n<a href="/projects.html">Click to view projects</a>';
+          break;
+        case 'about':
+          message = 'Opening ./about...\n<a href="/about.html">Click to learn more</a>';
+          break;
+        case 'secret':
+          message = 'Decrypting secret.txt...\n“you found the easter egg 💀”';
+          break;
+        default:
+          message = 'Unknown directory.';
+      }
+
+      output.innerHTML = `<pre>${message}</pre>`;
+    }
+  </script>
+
+</body>
+</html>
