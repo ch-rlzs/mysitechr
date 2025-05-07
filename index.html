@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>DedSec - Chrlzs</title>
+  <title>DedSec - CHRLZS</title>
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet" />
@@ -52,21 +52,9 @@
       font-size: 2em;
       color: var(--neon-green);
       text-shadow: 0 0 5px var(--neon-green);
-      animation: typing 3s steps(12), blink 0.7s step-end infinite alternate;
       white-space: nowrap;
       overflow: hidden;
-      border-right: 2px solid var(--neon-green);
-      width: 12ch;
       margin: 0 auto 20px;
-    }
-
-    @keyframes typing {
-      from { width: 0; }
-      to { width: 12ch; }
-    }
-
-    @keyframes blink {
-      50% { border-color: transparent; }
     }
 
     p {
@@ -125,6 +113,36 @@
       user-select: none;
       font-size: 14px;
       padding: 40px 10px;
+      transition: all 0.6s ease;
+    }
+
+    .glitch-out {
+      animation: glitchFadeOut 0.6s forwards;
+    }
+
+    @keyframes glitchFadeOut {
+      0% {
+        opacity: 1;
+        transform: translateX(0) skewX(0deg);
+        filter: hue-rotate(0deg);
+      }
+      25% {
+        transform: translateX(-5px) skewX(-5deg);
+        filter: hue-rotate(90deg);
+      }
+      50% {
+        transform: translateX(5px) skewX(5deg);
+        filter: hue-rotate(180deg);
+      }
+      75% {
+        transform: translateX(-3px) skewX(-3deg);
+        filter: hue-rotate(270deg);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(0) skewX(0deg);
+        filter: hue-rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -134,13 +152,11 @@
 
   <!-- ASCII Logo -->
   <pre id="asciiLogo">
-   ________  ___  ___  ________  ___       ________     
-  |\   __  \|\  \|\  \|\   __  \|\  \     |\   __  \    
-  \ \  \|\  \ \  \\\  \ \  \|\  \ \  \    \ \  \|\  \   
-   \ \   __  \ \  \\\  \ \   ____\ \  \    \ \   __  \  
-    \ \  \ \  \ \  \\\  \ \  \___|\ \  \____\ \  \ \  \ 
-     \ \__\ \__\ \_______\ \__\    \ \_______\ \__\ \__\
-      \|__|\|__|\|_______|\|__|     \|_______|\|__|\|__|
+   ____ _   _ ____  _     ____ ____ ____ 
+  / ___| | | |  _ \| |   / ___/ ___|  _ \
+ | |   | | | | |_) | |  | |  | |   | |_) |
+ | |___| |_| |  __/| |__| |__| |___|  _ < 
+  \____|\___/|_|   |_____\____\____|_| \_\
   </pre>
 
   <!-- Main Site Hidden Initially -->
@@ -149,7 +165,7 @@
     <p>> welcome to the darknet</p>
     <p>> all logs encrypted</p>
 
-    <a class="button" href="https://chrlzs.fun/">ENTER</a>
+    <a class="button" href="https://chrlzs.fun/poo">ENTER</a>
 
     <div class="footer">&copy; 2025 chrlzs | all systems monitored</div>
   </div>
@@ -160,9 +176,15 @@
 
   <!-- Reveal Main Site on Click -->
   <script>
-    document.getElementById("asciiLogo").addEventListener("click", function () {
-      document.getElementById("asciiLogo").style.display = "none";
-      document.getElementById("mainContent").style.display = "block";
+    const logo = document.getElementById("asciiLogo");
+    const main = document.getElementById("mainContent");
+
+    logo.addEventListener("click", () => {
+      logo.classList.add("glitch-out");
+      setTimeout(() => {
+        logo.style.display = "none";
+        main.style.display = "block";
+      }, 600); // match animation time
     });
   </script>
 
