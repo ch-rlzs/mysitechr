@@ -22,7 +22,7 @@
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 0 15px #00ffcc22;
-      white-space: pre;
+      white-space: pre-wrap;
     }
 
     .file {
@@ -63,7 +63,22 @@
     .indent-1 { padding-left: 2ch; }
     .indent-2 { padding-left: 4ch; }
     .indent-3 { padding-left: 6ch; }
-    .indent-4 { padding-left: 8ch; }
+
+    .command-line {
+      display: flex;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    #inputPrompt {
+      background: transparent;
+      border: none;
+      color: #00ffcc;
+      font-family: 'Fira Code', monospace;
+      font-size: 1em;
+      width: 100%;
+      outline: none;
+    }
   </style>
 </head>
 <body>
@@ -79,10 +94,14 @@
   <pre class="indent-1">└── <span class="file" onclick="navigate('/projects/website')">website/</span></pre>
 </div>
 <pre>├── <span class="file" onclick="navigate('/about.txt')">about.txt</span>
-└── <span class="file" onclick="navigate('/secret')">secret.log</span></pre>
+└── <i class="hidden">(1 file hidden)</i></pre>
 
     <div class="output" id="output"></div>
-    <div class="prompt">chrlzs@dedsec:/root$<span class="blinking-cursor"></span></div>
+
+    <div class="command-line">
+      <span>chrlzs@dedsec:/root$&nbsp;</span>
+      <input type="text" id="inputPrompt" autocomplete="off" autofocus onkeydown="handleCommand(event)">
+    </div>
   </div>
 
   <script>
@@ -97,13 +116,28 @@
 
       if (path.endsWith('.html')) {
         message += `<a href="${path}">Click to open ${path}</a>`;
-      } else if (path.includes('secret')) {
-        message += 'Decrypting...\n"ACCESS GRANTED: Welcome, agent."';
       } else {
         message += '(This file will open soon)';
       }
 
       output.innerHTML = `<pre>${message}</pre>`;
+    }
+
+    function handleCommand(e) {
+      if (e.key === 'Enter') {
+        const cmd = e.target.value.trim();
+        const output = document.getElementById('output');
+
+        if (cmd === 'cat secret.log') {
+          output.innerHTML = `<pre>i love evie</pre>`;
+        } else if (cmd === 'ls') {
+          output.innerHTML = `<pre>projects/\nabout.txt</pre>`;
+        } else {
+          output.innerHTML = `<pre>command not found: ${cmd}</pre>`;
+        }
+
+        e.target.value = '';
+      }
     }
   </script>
 
