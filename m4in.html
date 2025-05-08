@@ -79,6 +79,13 @@
       width: 100%;
       outline: none;
     }
+    pre {
+      margin: 0;
+      padding: 0;
+      line-height: 1.4;
+    }
+
+  
   </style>
 </head>
 <body>
@@ -128,7 +135,7 @@
         const cmd = e.target.value.trim();
         const output = document.getElementById('output');
 
-        if (cmd === 'cat secret.log') {
+        if (cmd === 'bope secret') {
           output.innerHTML = `<pre>i love evie</pre>`;
         } else if (cmd === 'ls') {
           output.innerHTML = `<pre>projects/\nabout.txt</pre>`;
