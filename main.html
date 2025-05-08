@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>chizled</title>
+  <title>chizledOS</title>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
     body {
@@ -12,57 +12,31 @@
       font-family: 'Fira Code', monospace;
       margin: 0;
       padding: 40px;
-      height: 100vh;
-      overflow: hidden;
     }
 
     .terminal {
       max-width: 900px;
       margin: auto;
-      border: 1px solid #00ffcc55;
-      padding: 20px;
       background-color: #0f0f0f;
-      box-shadow: 0 0 20px #00ffcc33;
+      border: 1px solid #00ffcc44;
       border-radius: 8px;
-      height: 80vh;
-      overflow-y: auto;
+      padding: 20px;
+      box-shadow: 0 0 15px #00ffcc22;
+      white-space: pre;
     }
 
-    .prompt {
-      margin-bottom: 10px;
-    }
-
-    ul.file-tree {
-      list-style: none;
-      padding-left: 20px;
-    }
-
-    .file-tree li {
-      margin: 6px 0;
+    .file {
       cursor: pointer;
     }
 
-    .folder::before {
-      content: "📁 ";
-    }
-
-    .file::before {
-      content: "📄 ";
-    }
-
-    .nested {
-      display: none;
-      padding-left: 20px;
-    }
-
-    .active {
-      display: block;
+    .file:hover {
+      color: #ffffff;
     }
 
     .output {
       margin-top: 20px;
       color: #00ffaa;
-      border-top: 1px dashed #00ffcc33;
+      border-top: 1px dashed #00ffcc44;
       padding-top: 10px;
     }
 
@@ -71,7 +45,6 @@
       width: 10px;
       background-color: #00ffcc;
       animation: blink 1s step-end infinite;
-      margin-left: 4px;
     }
 
     @keyframes blink {
@@ -86,49 +59,48 @@
     a:hover {
       text-decoration: underline;
     }
+
+    .indent-1 { padding-left: 2ch; }
+    .indent-2 { padding-left: 4ch; }
+    .indent-3 { padding-left: 6ch; }
+    .indent-4 { padding-left: 8ch; }
   </style>
 </head>
 <body>
 
   <div class="terminal">
-    <div class="prompt">chrlzs@dedsec:/root$ ls</div>
-    <ul class="file-tree">
-      <li onclick="toggle('projects')"><span class="folder">projects/</span></li>
-      <ul id="projects" class="nested">
-        <li onclick="toggle(event, 'game')"><span class="folder">game/</span></li>
-        <ul id="game" class="nested">
-          <li onclick="navigate(event, '/game/index.html')"><span class="file">index.html</span></li>
-        </ul>
-        <li onclick="navigate(event, '/projects/website')"><span class="folder">website/</span></li>
-      </ul>
-      <li onclick="navigate(event, '/about.txt')"><span class="file">about.txt</span></li>
-      <li onclick="navigate(event, '/secret')"><span class="file">secret.log</span></li>
-    </ul>
+<pre>/root
+├── <span class="file" onclick="toggle('projects')">projects/</span></pre>
+<div id="projects" style="display:none;">
+  <pre class="indent-1">├── <span class="file" onclick="toggle('game')">game/</span></pre>
+  <div id="game" style="display:none;">
+    <pre class="indent-2">└── <span class="file" onclick="navigate('/game/index.html')">index.html</span></pre>
+  </div>
+  <pre class="indent-1">└── <span class="file" onclick="navigate('/projects/website')">website/</span></pre>
+</div>
+<pre>├── <span class="file" onclick="navigate('/about.txt')">about.txt</span>
+└── <span class="file" onclick="navigate('/secret')">secret.log</span></pre>
 
     <div class="output" id="output"></div>
-
-    <div class="prompt" id="bottomPrompt">chrlzs@dedsec:/root$<span class="blinking-cursor"></span></div>
+    <div class="prompt">chrlzs@dedsec:/root$<span class="blinking-cursor"></span></div>
   </div>
 
   <script>
-    function toggle(eventOrId, idMaybe) {
-      let id = typeof eventOrId === 'string' ? eventOrId : idMaybe;
-      if (typeof eventOrId !== 'string') eventOrId.stopPropagation();
-      const element = document.getElementById(id);
-      if (element) element.classList.toggle('active');
+    function toggle(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 
-    function navigate(event, path) {
-      event.stopPropagation();
+    function navigate(path) {
       const output = document.getElementById('output');
       let message = `Opening ${path}...\n`;
 
       if (path.endsWith('.html')) {
         message += `<a href="${path}">Click to open ${path}</a>`;
       } else if (path.includes('secret')) {
-        message += 'Decrypting... 🧠 Access granted.\n“You found the hidden log.”';
+        message += 'Decrypting...\n"ACCESS GRANTED: Welcome, agent."';
       } else {
-        message += 'Opening file...\n(Coming soon)';
+        message += '(This file will open soon)';
       }
 
       output.innerHTML = `<pre>${message}</pre>`;
