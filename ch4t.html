@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>chrlzs local chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #0a0a0a;
+      color: #00ffcc;
+      font-family: 'Fira Code', monospace;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .chat-box {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #111;
+      border: 1px solid #00ffcc33;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 10px #00ffcc22;
+    }
+
+    .messages {
+      height: 400px;
+      overflow-y: auto;
+      padding-right: 10px;
+      margin-bottom: 15px;
+      border-bottom: 1px dashed #00ffcc44;
+    }
+
+    .message {
+      margin-bottom: 10px;
+    }
+
+    .username {
+      color: #00ffaa;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 20px);
+      padding: 10px;
+      font-family: 'Fira Code', monospace;
+      border: 1px solid #00ffcc33;
+      background: #0a0a0a;
+      color: #00ffcc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 8px 12px;
+      background: #00ffcc;
+      color: black;
+      font-family: 'Fira Code', monospace;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .username-input {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-box">
+  <div class="username-input" id="usernameSection">
+    <input type="text" id="usernameInput" placeholder="Enter a username..." />
+    <button onclick="setUsername()">Set Username</button>
+  </div>
+
+  <div class="messages" id="chatMessages"></div>
+
+  <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage()" />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+  let username = localStorage.getItem('chrlzsUsername') || '';
+  const messages = JSON.parse(localStorage.getItem('chrlzsChat') || '[]');
+
+  const usernameSection = document.getElementById('usernameSection');
+  const chatMessages = document.getElementById('chatMessages');
+
+  if (username) {
+    document.getElementById('usernameInput').value = username;
+    usernameSection.style.display = 'none';
+    renderMessages();
+  }
+
+  function setUsername() {
+    const input = document.getElementById('usernameInput').value.trim();
+    if (input) {
+      username = input;
+      localStorage.setItem('chrlzsUsername', username);
+      usernameSection.style.display = 'none';
+      renderMessages();
+    }
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text || !username) return;
+
+    const message = {
+      user: username,
+      text: text,
+      timestamp: new Date().toISOString()
+    };
+
+    messages.push(message);
+    localStorage.setItem('chrlzsChat', JSON.stringify(messages));
+    input.value = '';
+    renderMessages();
+  }
+
+  function renderMessages() {
+    chatMessages.innerHTML = '';
+    messages.forEach(msg => {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.innerHTML = `<span class="username">${msg.user}:</span> ${msg.text}`;
+      chatMessages.appendChild(div);
+    });
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
