@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>chizled:~</title>
+  <title>chizled</title>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
     body {
@@ -29,23 +29,17 @@
     }
 
     .prompt {
-      color: #00ffcc;
       margin-bottom: 10px;
     }
 
-    .file-list {
+    ul.file-tree {
       list-style: none;
       padding-left: 20px;
     }
 
-    .file-list li {
-      margin: 8px 0;
+    .file-tree li {
+      margin: 6px 0;
       cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .file-list li:hover {
-      color: #ffffff;
     }
 
     .folder::before {
@@ -54,6 +48,15 @@
 
     .file::before {
       content: "📄 ";
+    }
+
+    .nested {
+      display: none;
+      padding-left: 20px;
+    }
+
+    .active {
+      display: block;
     }
 
     .output {
@@ -88,39 +91,44 @@
 <body>
 
   <div class="terminal">
-    <div class="prompt">chrlzs@dedsec:~$ ls</div>
-    <ul class="file-list">
-      <li onclick="navigate('resume')"><span class="folder">resume/</span></li>
-      <li onclick="navigate('projects')"><span class="folder">projects/</span></li>
-      <li onclick="navigate('about')"><span class="folder">about/</span></li>
-      <li onclick="navigate('secret')"><span class="file">secret.txt</span></li>
+    <div class="prompt">chrlzs@dedsec:/root$ ls</div>
+    <ul class="file-tree">
+      <li onclick="toggle('projects')"><span class="folder">projects/</span></li>
+      <ul id="projects" class="nested">
+        <li onclick="toggle(event, 'game')"><span class="folder">game/</span></li>
+        <ul id="game" class="nested">
+          <li onclick="navigate(event, '/game/index.html')"><span class="file">index.html</span></li>
+        </ul>
+        <li onclick="navigate(event, '/projects/website')"><span class="folder">website/</span></li>
+      </ul>
+      <li onclick="navigate(event, '/about.txt')"><span class="file">about.txt</span></li>
+      <li onclick="navigate(event, '/secret')"><span class="file">secret.log</span></li>
     </ul>
 
     <div class="output" id="output"></div>
 
-    <div class="prompt" id="bottomPrompt">chrlzs@dedsec:~$<span class="blinking-cursor"></span></div>
+    <div class="prompt" id="bottomPrompt">chrlzs@dedsec:/root$<span class="blinking-cursor"></span></div>
   </div>
 
   <script>
-    function navigate(dir) {
-      const output = document.getElementById('output');
-      let message = '';
+    function toggle(eventOrId, idMaybe) {
+      let id = typeof eventOrId === 'string' ? eventOrId : idMaybe;
+      if (typeof eventOrId !== 'string') eventOrId.stopPropagation();
+      const element = document.getElementById(id);
+      if (element) element.classList.toggle('active');
+    }
 
-      switch (dir) {
-        case 'resume':
-          message = 'Opening ./resume...\n<a href="/resume.html">Click to view resume</a>';
-          break;
-        case 'projects':
-          message = 'Opening ./projects...\n<a href="/projects.html">Click to view projects</a>';
-          break;
-        case 'about':
-          message = 'Opening ./about...\n<a href="/about.html">Click to learn more</a>';
-          break;
-        case 'secret':
-          message = 'Decrypting secret.txt...\n“you found the easter egg 💀”';
-          break;
-        default:
-          message = 'Unknown directory.';
+    function navigate(event, path) {
+      event.stopPropagation();
+      const output = document.getElementById('output');
+      let message = `Opening ${path}...\n`;
+
+      if (path.endsWith('.html')) {
+        message += `<a href="${path}">Click to open ${path}</a>`;
+      } else if (path.includes('secret')) {
+        message += 'Decrypting... 🧠 Access granted.\n“You found the hidden log.”';
+      } else {
+        message += 'Opening file...\n(Coming soon)';
       }
 
       output.innerHTML = `<pre>${message}</pre>`;
