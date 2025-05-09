@@ -128,6 +128,46 @@ db.ref('users').on('value', snapshot => {
         <button class="ban-btn" onclick="banUser('${user.uid}')">Ban</button>
       `;
       userList.appendChild(div);
+  // Add these to your existing code
+
+let typingTimeout;  // To detect when a user stops typing
+
+// Listen for typing events
+const messageInput = document.getElementById('messageInput');
+const typingIndicator = document.createElement('div');
+typingIndicator.style.color = '#00ffcc';
+typingIndicator.style.fontSize = '0.9em';
+typingIndicator.innerHTML = "<i>User is typing...</i>";
+
+function startTyping() {
+  db.ref('typing/' + uid).set(true); // Indicate the user is typing
+  if (typingTimeout) clearTimeout(typingTimeout); // Clear existing timeout
+  typingTimeout = setTimeout(stopTyping, 2000);  // Stop typing after 2 seconds of inactivity
+}
+
+function stopTyping() {
+  db.ref('typing/' + uid).set(false); // Indicate the user stopped typing
+}
+
+messageInput.addEventListener('input', startTyping);
+
+// Listen for other users typing
+db.ref('typing').on('value', snapshot => {
+  const typingUsers = snapshot.val() || {};
+  let typingUsersList = Object.keys(typingUsers).filter(uid => typingUsers[uid]);
+
+  if (typingUsersList.length > 0 && !typingUsersList.includes(uid)) {
+    typingIndicator.innerHTML = `<i>${typingUsersList.join(', ')} are typing...</i>`;
+    if (!document.getElementById('typingIndicator')) {
+      chatMessages.appendChild(typingIndicator);
+    }
+  } else {
+    if (document.getElementById('typingIndicator')) {
+      typingIndicator.remove();
+    }
+  }
+});
+s
     }
   }
 });
