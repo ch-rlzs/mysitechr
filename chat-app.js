@@ -10,7 +10,19 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-firebase.initializeApp(firebaseConfig);
+fifirebase.initializeApp(firebaseConfig);
+firebase.auth().signInAnonymously().then(() => {
+  const currentUser = firebase.auth().currentUser;
+  uid = currentUser.uid;
+  localStorage.setItem('chrlzsUid', uid);
+
+  db.ref('admins/' + uid).once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      isAdmin = true;
+      adminPanel.style.display = 'block';
+    }
+  });
+});rebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let username = localStorage.getItem('chrlzsUsername');
