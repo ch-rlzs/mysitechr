@@ -1,164 +1,175 @@
+# Save the updated chat HTML file with admin system implemented
+chat_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>chrlzs chat</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"/>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrlzs Chat</title>
   <style>
     body {
-      background-color: #0a0a0a;
-      color: #00ffcc;
-      font-family: 'Fira Code', monospace;
-      margin: 0;
+      font-family: monospace;
+      background: #0f0f0f;
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
     }
-
-    .chat-box {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #111;
-      border: 1px solid #00ffcc33;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 0 10px #00ffcc22;
-    }
-
-    .messages {
+    #chat {
+      width: 90%;
+      max-width: 600px;
       height: 400px;
-      overflow-y: auto;
-      padding-right: 10px;
-      margin-bottom: 15px;
-      border-bottom: 1px dashed #00ffcc44;
-    }
-
-    .message {
-      margin-bottom: 10px;
-    }
-
-    .username {
-      color: #00ffaa;
-    }
-
-    .timestamp {
-      color: #888;
-      font-size: 0.8em;
-      margin-left: 6px;
-    }
-
-    input[type="text"] {
-      width: calc(100% - 20px);
+      background: #1c1c1c;
+      border: 1px solid #333;
       padding: 10px;
-      font-family: 'Fira Code', monospace;
-      border: 1px solid #00ffcc33;
-      background: #0a0a0a;
-      color: #00ffcc;
-      border-radius: 4px;
+      overflow-y: scroll;
       margin-bottom: 10px;
     }
-
-    button {
-      padding: 8px 12px;
-      background: #00ffcc;
-      color: black;
-      font-family: 'Fira Code', monospace;
-      border: none;
+    .message {
+      margin: 5px 0;
+      padding: 5px;
+      background: #2a2a2a;
       border-radius: 4px;
+    }
+    .own-message {
+      background: #1e1e3f;
+    }
+    .delete-btn {
+      float: right;
+      color: red;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .admin-tools {
+      margin-left: 10px;
+      color: orange;
       cursor: pointer;
     }
-
-    .username-input {
-      margin-bottom: 20px;
+    input, button {
+      margin: 5px;
     }
   </style>
 </head>
 <body>
 
-<div class="chat-box">
-  <div class="username-input" id="usernameSection">
-    <input type="text" id="usernameInput" placeholder="Enter a username..." />
-    <button onclick="setUsername()">Set Username</button>
-  </div>
+<h2>Chrlzs Chat</h2>
+<div id="chat"></div>
 
-  <div class="messages" id="chatMessages"></div>
+<input type="text" id="username" placeholder="Enter username">
+<button onclick="setUsername()">Set Username</button>
+<br>
+<input type="text" id="message" placeholder="Enter message">
+<button onclick="sendMessage()">Send</button>
 
-  <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage()" />
-  <button onclick="sendMessage()">Send</button>
-</div>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"></script>
 
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
     authDomain: "chrlzs-chat-645cf.firebaseapp.com",
-    databaseURL: "https://chrlzs-chat-645cf-default-rtdb.europe-west1.firebasedatabase.app/",
     projectId: "chrlzs-chat-645cf",
     storageBucket: "chrlzs-chat-645cf.appspot.com",
     messagingSenderId: "426878855113",
     appId: "1:426878855113:web:166da584829cffd5106a18",
-    measurementId: "G-5XW702X3TQ"
+    databaseURL: "https://chrlzs-chat-645cf-default-rtdb.europe-west1.firebasedatabase.app/"
   };
-
-  firebase.initializeApp(firebaseConfig);
+  const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  let username = localStorage.getItem('chrlzsUsername');
-  const chatMessages = document.getElementById('chatMessages');
-  const usernameSection = document.getElementById('usernameSection');
+  let username = localStorage.getItem("username") || "";
+  let isAdmin = false;
+  let kicked = false;
 
-  if (username) {
-    document.getElementById('usernameInput').value = username;
-    usernameSection.style.display = 'none';
-  }
+  const chat = document.getElementById("chat");
 
-  function formatTimestamp(ms) {
-    const date = new Date(ms);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
+  db.ref("kickedUsers").on("value", (snapshot) => {
+    const list = snapshot.val() || {};
+    if (list[username]) {
+      kicked = true;
+      alert("You have been kicked from the chat.");
+    }
+  });
 
-  function censorMessage(text) {
-    const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'dick', 'cunt'];
-    const pattern = new RegExp(`\\b(${badWords.join('|')})\\b`, 'gi');
-    return text.replace(pattern, word => word[0] + '*'.repeat(word.length - 1));
-  }
+  db.ref("messages").on("child_added", (data) => {
+    const msg = data.val();
+    const el = document.createElement("div");
+    el.className = "message" + (msg.user === username ? " own-message" : "");
+    el.innerHTML = `<strong>${msg.user}</strong>: ${filterBadWords(msg.text)} <span style="font-size: 0.8em; color: #aaa;">(${msg.time})</span>`;
+
+    if (msg.user === username || isAdmin) {
+      const delBtn = document.createElement("span");
+      delBtn.className = "delete-btn";
+      delBtn.innerText = "x";
+      delBtn.onclick = () => db.ref("messages/" + data.key).remove();
+      el.appendChild(delBtn);
+    }
+
+    if (isAdmin && msg.user !== username) {
+      const kickBtn = document.createElement("span");
+      kickBtn.className = "admin-tools";
+      kickBtn.innerText = "[kick]";
+      kickBtn.onclick = () => db.ref("kickedUsers/" + msg.user).set(true);
+      el.appendChild(kickBtn);
+    }
+
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+  });
+
+  db.ref("messages").on("child_removed", (data) => {
+    chat.innerHTML = "";
+  });
 
   function setUsername() {
-    const input = document.getElementById('usernameInput').value.trim();
-    if (input.length < 3) {
-      alert('Username must be at least 3 characters long.');
-      return;
+    const input = document.getElementById("username").value.trim();
+    if (!input) return alert("Username required.");
+    if (input === "chrlzs2") {
+      const pass = prompt("Enter admin password:");
+      if (pass === "roFmyt-murpe8-guvpuc") {
+        isAdmin = true;
+        alert("Admin access granted.");
+      } else {
+        return alert("Incorrect password.");
+      }
     }
     username = input;
-    localStorage.setItem('chrlzsUsername', username);
-    usernameSection.style.display = 'none';
+    localStorage.setItem("username", username);
+    alert("Username set to " + username);
   }
 
   function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const rawText = input.value.trim();
-    if (!rawText || !username) return;
+    const text = document.getElementById("message").value.trim();
+    if (!username) return alert("Set username first.");
+    if (kicked) return alert("You are kicked and cannot send messages.");
+    if (!text) return;
 
-    const cleanText = censorMessage(rawText);
-    const message = {
+    db.ref("messages").push({
       user: username,
-      text: cleanText,
-      timestamp: Date.now()
-    };
-
-    db.ref('messages').push(message);
-    input.value = '';
+      text: text,
+      time: new Date().toLocaleTimeString()
+    });
+    document.getElementById("message").value = "";
   }
 
-  db.ref('messages').on('child_added', snapshot => {
-    const msg = snapshot.val();
-    const div = document.createElement('div');
-    div.classList.add('message');
-    div.innerHTML = `<span class="username">${msg.user}:</span> ${msg.text} <span class="timestamp">${formatTimestamp(msg.timestamp)}</span>`;
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  });
+  function filterBadWords(text) {
+    const badWords = ["fuck", "shit", "bitch", "cunt", "asshole", "dick"];
+    for (const word of badWords) {
+      const regex = new RegExp(word, "gi");
+      text = text.replace(regex, word[0] + "*".repeat(word.length - 1));
+    }
+    return text;
+  }
 </script>
 
 </body>
 </html>
+"""
+
+# Save the file
+file_path = "/mnt/data/chat.html"
+with open(file_path, "w") as f:
+    f.write(chat_html)
+
+file_path
