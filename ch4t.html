@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet"/>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <style>
     body {
       background-color: #0a0a0a;
@@ -92,6 +91,12 @@
   <button onclick="sendMessage()">Send</button>
 </div>
 
+<!-- Admin Panel -->
+<div id="adminPanel" style="display: none; margin-top: 40px; padding: 20px; border: 1px solid #00ffcc33; border-radius: 8px; background: #111;">
+  <h3 style="color:#00ffaa;">Banned Users</h3>
+  <ul id="bannedUsers" style="list-style-type: none; padding-left: 0;"></ul>
+</div>
+
 <script>
   // Firebase config
   const firebaseConfig = {
@@ -109,23 +114,6 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Authenticate anonymously
-  let userUID = null;
-  firebase.auth().signInAnonymously()
-    .then(() => {
-      console.log('Signed in anonymously');
-    })
-    .catch(error => {
-      console.error('Auth error:', error);
-    });
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      userUID = user.uid;
-    }
-  });
-
-  // User identity
   let username = localStorage.getItem('chrlzsUsername');
   const chatMessages = document.getElementById('chatMessages');
   const usernameSection = document.getElementById('usernameSection');
@@ -133,6 +121,7 @@
   if (username) {
     document.getElementById('usernameInput').value = username;
     usernameSection.style.display = 'none';
+    checkAdminPanel();
   }
 
   function setUsername() {
@@ -141,6 +130,7 @@
       username = input;
       localStorage.setItem('chrlzsUsername', username);
       usernameSection.style.display = 'none';
+      checkAdminPanel();
     }
   }
 
@@ -150,52 +140,91 @@
     return text.replace(pattern, match => match[0] + '*'.repeat(match.length - 1));
   }
 
-  const cooldownMs = 3000;
-  let lastSentTime = 0;
-
-  async function isBanned(uid) {
-    const snapshot = await db.ref('banned/' + uid).once('value');
-    return snapshot.exists();
-  }
-
-  async function sendMessage() {
+  function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
-    if (!text || !username || !userUID) return;
+    if (!text || !username) return;
 
-    const now = Date.now();
-    if (now - lastSentTime < cooldownMs) {
-      alert('You’re sending messages too fast. Please wait a moment.');
-      return;
-    }
+    // Check if user is banned
+    db.ref('banned/' + getUid()).once('value', snap => {
+      if (snap.exists()) {
+        alert("You are banned from sending messages.");
+        return;
+      }
 
-    if (await isBanned(userUID)) {
-      alert('You are banned from sending messages.');
-      return;
-    }
+      const message = {
+        user: username,
+        text: filterExplicit(text),
+        timestamp: Date.now(),
+        uid: getUid()
+      };
 
-    lastSentTime = now;
-
-    const message = {
-      user: username,
-      uid: userUID,
-      text: filterExplicit(text),
-      timestamp: Date.now()
-    };
-
-    db.ref('messages').push(message);
-    input.value = '';
+      db.ref('messages').push(message);
+      input.value = '';
+    });
   }
 
   function deleteMessage(messageId) {
     db.ref('messages/' + messageId).remove();
   }
 
-  function banUser(uid) {
-    if (confirm('Ban this user?')) {
-      db.ref('banned/' + uid).set(true);
+  function banUser(uid, name) {
+    if (confirm(`Ban user "${name}"?`)) {
+      db.ref('banned/' + uid).set({ username: name });
       alert('User has been banned.');
     }
+  }
+
+  function unbanUser(uid) {
+    if (confirm('Unban this user?')) {
+      db.ref('banned/' + uid).remove();
+      alert('User has been unbanned.');
+    }
+  }
+
+  function updateBannedUserList() {
+    const bannedList = document.getElementById('bannedUsers');
+    bannedList.innerHTML = '';
+
+    db.ref('banned').once('value', snapshot => {
+      snapshot.forEach(child => {
+        const uid = child.key;
+        const data = child.val();
+        const name = data.username || 'Unknown';
+
+        const li = document.createElement('li');
+        li.style.marginBottom = '8px';
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.style.alignItems = 'center';
+        li.style.padding = '6px 10px';
+        li.style.border = '1px dashed #00ffcc44';
+        li.style.borderRadius = '4px';
+
+        li.innerHTML = `
+          <span><strong>${name}</strong> <span style="color:#00ffcc88">(UID: ${uid})</span></span>
+          <button class="delete-btn" onclick="unbanUser('${uid}')">Unban</button>
+        `;
+        bannedList.appendChild(li);
+      });
+    });
+  }
+
+  function checkAdminPanel() {
+    if (username === 'chrlzs2') {
+      document.getElementById('adminPanel').style.display = 'block';
+      updateBannedUserList();
+      db.ref('banned').on('value', updateBannedUserList);
+    }
+  }
+
+  function getUid() {
+    // Simple UID simulation via localStorage for now
+    if (!localStorage.getItem('chrlzsUid')) {
+      const newId = 'uid-' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem('chrlzsUid', newId);
+    }
+    return localStorage.getItem('chrlzsUid');
   }
 
   db.ref('messages').on('child_added', snapshot => {
@@ -212,8 +241,8 @@
     div.innerHTML = `
       <span class="username">${msg.user}:</span> ${msg.text}
       <span style="color: #00ffcc66; font-size: 0.8em;"> [${time}]</span>
-      ${(isOwner || isAdmin) ? `<button class="delete-btn" onclick="deleteMessage('${messageId}')">delete</button>` : ''}
-      ${(isAdmin && !isOwner && msg.uid) ? `<button class="delete-btn" onclick="banUser('${msg.uid}')">ban</button>` : ''}
+      ${(isOwner || isAdmin) ? `<button class="delete-btn" onclick="deleteMessage('${messageId}')">Delete</button>` : ''}
+      ${(isAdmin && msg.uid) ? `<button class="delete-btn" onclick="banUser('${msg.uid}', '${msg.user}')">Ban</button>` : ''}
     `;
 
     chatMessages.appendChild(div);
