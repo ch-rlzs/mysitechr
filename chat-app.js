@@ -49,7 +49,7 @@ if (username) {
     adminPanel.style.display = 'block';
   }
 }firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+
 
 let username = localStorage.getItem('chrlzsUsername') || '';
 let uid = localStorage.getItem('chrlzsUid') || '';
