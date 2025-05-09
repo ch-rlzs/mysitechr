@@ -102,9 +102,16 @@
   <div id="typingIndicator" style="margin-bottom:10px; color: #00ffaa;"></div>
 
   <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage()" />
-  <button onclick="sendMessage()">Send</button>
-  <button onclick="signOut()" style="margin-top:10px;">Sign Out</button>
-  <div id="currentUserDisplay" style="margin-bottom: 10px; color: #00ffcc;"></div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+  <div>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="signOut()" style="margin-top:10px;">Sign Out</button>
+  </div>
+  <div id="currentUserDisplay" style="font-size: 0.8em; color: #888;"></div>
+  </div>
+
+  
+ 
 
   <div id="adminPanel" style="display:none;">
     <h3>🛠 Admin Panel</h3>
