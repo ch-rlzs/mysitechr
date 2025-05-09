@@ -185,24 +185,17 @@ function deleteMessage(messageId) {
 
 // Ban user
 function banUser(userToBan) {
-  db.ref('bannedUsers').once('value', snapshot => {
-    const banned = snapshot.val() || [];
-    if (!banned.includes(userToBan)) {
-      banned.push(userToBan);
-      db.ref('bannedUsers').set(banned);
-      alert(`${userToBan} has been banned.`);
-    }
-  });
+  if (!isAdmin) return;
+  db.ref('bannedUsers/' + userToBan).set(true);
 }
 
-// Show banned users
 function showBannedUsers() {
+  if (!isAdmin) return;
   db.ref('bannedUsers').once('value', snapshot => {
-    const banned = snapshot.val() || [];
-    alert(`Banned Users: ${banned.join(', ')}`);
+    const banned = snapshot.val() || {};
+    alert('Banned Users: ' + Object.keys(banned).join(', '));
   });
 }
-
 // Sign out
 function signOut() {
   localStorage.removeItem('chrlzsUsername');
