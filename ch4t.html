@@ -8,7 +8,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-
   <style>
     body {
       background-color: #0a0a0a;
@@ -68,6 +67,7 @@
     .username-input {
       margin-bottom: 20px;
     }
+
     .delete-btn {
       margin-left: 10px;
       background: transparent;
@@ -107,15 +107,25 @@
 
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-  firebase.auth().signInAnonymously()
-  .then(() => {
-    console.log('Signed in anonymously');
-  })
-  .catch(error => {
-    console.error('Auth error:', error);
-  });
   const db = firebase.database();
 
+  // Authenticate anonymously
+  let userUID = null;
+  firebase.auth().signInAnonymously()
+    .then(() => {
+      console.log('Signed in anonymously');
+    })
+    .catch(error => {
+      console.error('Auth error:', error);
+    });
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      userUID = user.uid;
+    }
+  });
+
+  // User identity
   let username = localStorage.getItem('chrlzsUsername');
   const chatMessages = document.getElementById('chatMessages');
   const usernameSection = document.getElementById('usernameSection');
@@ -135,18 +145,40 @@
   }
 
   function filterExplicit(text) {
-    const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'cunt']; // extend as needed
+    const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'cunt'];
     const pattern = new RegExp(badWords.join('|'), 'gi');
     return text.replace(pattern, match => match[0] + '*'.repeat(match.length - 1));
   }
 
-  function sendMessage() {
+  const cooldownMs = 3000;
+  let lastSentTime = 0;
+
+  async function isBanned(uid) {
+    const snapshot = await db.ref('banned/' + uid).once('value');
+    return snapshot.exists();
+  }
+
+  async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
-    if (!text || !username) return;
+    if (!text || !username || !userUID) return;
+
+    const now = Date.now();
+    if (now - lastSentTime < cooldownMs) {
+      alert('You’re sending messages too fast. Please wait a moment.');
+      return;
+    }
+
+    if (await isBanned(userUID)) {
+      alert('You are banned from sending messages.');
+      return;
+    }
+
+    lastSentTime = now;
 
     const message = {
       user: username,
+      uid: userUID,
       text: filterExplicit(text),
       timestamp: Date.now()
     };
@@ -157,6 +189,13 @@
 
   function deleteMessage(messageId) {
     db.ref('messages/' + messageId).remove();
+  }
+
+  function banUser(uid) {
+    if (confirm('Ban this user?')) {
+      db.ref('banned/' + uid).set(true);
+      alert('User has been banned.');
+    }
   }
 
   db.ref('messages').on('child_added', snapshot => {
@@ -174,6 +213,7 @@
       <span class="username">${msg.user}:</span> ${msg.text}
       <span style="color: #00ffcc66; font-size: 0.8em;"> [${time}]</span>
       ${(isOwner || isAdmin) ? `<button class="delete-btn" onclick="deleteMessage('${messageId}')">delete</button>` : ''}
+      ${(isAdmin && !isOwner && msg.uid) ? `<button class="delete-btn" onclick="banUser('${msg.uid}')">ban</button>` : ''}
     `;
 
     chatMessages.appendChild(div);
