@@ -15,7 +15,6 @@
       margin: 0;
       padding: 20px;
     }
-
     .chat-box {
       max-width: 800px;
       margin: 0 auto;
@@ -25,7 +24,6 @@
       padding: 20px;
       box-shadow: 0 0 10px #00ffcc22;
     }
-
     .messages {
       height: 400px;
       overflow-y: auto;
@@ -33,15 +31,12 @@
       margin-bottom: 15px;
       border-bottom: 1px dashed #00ffcc44;
     }
-
     .message {
       margin-bottom: 10px;
     }
-
     .username {
       color: #00ffaa;
     }
-
     input[type="text"] {
       width: calc(100% - 20px);
       padding: 10px;
@@ -52,7 +47,6 @@
       border-radius: 4px;
       margin-bottom: 10px;
     }
-
     button {
       padding: 8px 12px;
       background: #00ffcc;
@@ -62,11 +56,9 @@
       border-radius: 4px;
       cursor: pointer;
     }
-
     .username-input {
       margin-bottom: 20px;
     }
-
     .delete-btn {
       margin-left: 10px;
       background: transparent;
@@ -74,6 +66,24 @@
       border: none;
       cursor: pointer;
       font-size: 0.9em;
+    }
+    .admin-panel {
+      margin-top: 20px;
+      border-top: 1px dashed #00ffcc44;
+      padding-top: 10px;
+    }
+    .admin-user {
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+    .ban-btn {
+      margin-left: 10px;
+      background: transparent;
+      color: #ff4444;
+      border: 1px solid #ff4444;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
     }
   </style>
 </head>
@@ -89,12 +99,12 @@
 
   <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage()" />
   <button onclick="sendMessage()">Send</button>
-</div>
+  <button onclick="signOut()" style="margin-top:10px;">Sign Out</button>
 
-<!-- Admin Panel -->
-<div id="adminPanel" style="display: none; margin-top: 40px; padding: 20px; border: 1px solid #00ffcc33; border-radius: 8px; background: #111;">
-  <h3 style="color:#00ffaa;">Banned Users</h3>
-  <ul id="bannedUsers" style="list-style-type: none; padding-left: 0;"></ul>
+  <div class="admin-panel" id="adminPanel" style="display:none;">
+    <h3>🛠 Admin Panel</h3>
+    <div id="userList"></div>
+  </div>
 </div>
 
 <script>
@@ -109,19 +119,23 @@
     appId: "1:426878855113:web:166da584829cffd5106a18",
     measurementId: "G-5XW702X3TQ"
   };
-
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
   let username = localStorage.getItem('chrlzsUsername');
+  let uid = localStorage.getItem('chrlzsUid') || crypto.randomUUID();
+  localStorage.setItem('chrlzsUid', uid);
+
   const chatMessages = document.getElementById('chatMessages');
   const usernameSection = document.getElementById('usernameSection');
+  const adminPanel = document.getElementById('adminPanel');
+  const userList = document.getElementById('userList');
 
+  // Set username if stored
   if (username) {
     document.getElementById('usernameInput').value = username;
     usernameSection.style.display = 'none';
-    checkAdminPanel();
+    updatePresence();
   }
 
   function setUsername() {
@@ -130,7 +144,15 @@
       username = input;
       localStorage.setItem('chrlzsUsername', username);
       usernameSection.style.display = 'none';
-      checkAdminPanel();
+      updatePresence();
+    }
+  }
+
+  function signOut() {
+    if (confirm("Sign out and choose a new username?")) {
+      localStorage.removeItem('chrlzsUsername');
+      localStorage.removeItem('chrlzsUid');
+      location.reload();
     }
   }
 
@@ -141,118 +163,83 @@
   }
 
   function sendMessage() {
+    if (!username || banned) return;
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
-    if (!text || !username) return;
-
-    // Check if user is banned
-    db.ref('banned/' + getUid()).once('value', snap => {
-      if (snap.exists()) {
-        alert("You are banned from sending messages.");
-        return;
-      }
-
-      const message = {
-        user: username,
-        text: filterExplicit(text),
-        timestamp: Date.now(),
-        uid: getUid()
-      };
-
-      db.ref('messages').push(message);
-      input.value = '';
-    });
+    if (!text) return;
+    const message = {
+      user: username,
+      uid,
+      text: filterExplicit(text),
+      timestamp: Date.now()
+    };
+    db.ref('messages').push(message);
+    input.value = '';
   }
 
-  function deleteMessage(messageId) {
-    db.ref('messages/' + messageId).remove();
+  function deleteMessage(id) {
+    db.ref('messages/' + id).remove();
   }
 
-  function banUser(uid, name) {
-    if (confirm(`Ban user "${name}"?`)) {
-      db.ref('banned/' + uid).set({ username: name });
-      alert('User has been banned.');
+  function updatePresence() {
+    db.ref('users/' + uid).set({ username, uid });
+  }
+
+  function banUser(targetUid) {
+    if (confirm("Ban this user?")) {
+      db.ref('bannedUsers/' + targetUid).set(true);
     }
   }
 
-  function unbanUser(uid) {
-    if (confirm('Unban this user?')) {
-      db.ref('banned/' + uid).remove();
-      alert('User has been unbanned.');
+  let banned = false;
+  db.ref('bannedUsers/' + uid).on('value', snapshot => {
+    if (snapshot.exists()) {
+      banned = true;
+      alert("You have been banned from the chat.");
+      location.reload();
     }
-  }
-
-  function updateBannedUserList() {
-    const bannedList = document.getElementById('bannedUsers');
-    bannedList.innerHTML = '';
-
-    db.ref('banned').once('value', snapshot => {
-      snapshot.forEach(child => {
-        const uid = child.key;
-        const data = child.val();
-        const name = data.username || 'Unknown';
-
-        const li = document.createElement('li');
-        li.style.marginBottom = '8px';
-        li.style.display = 'flex';
-        li.style.justifyContent = 'space-between';
-        li.style.alignItems = 'center';
-        li.style.padding = '6px 10px';
-        li.style.border = '1px dashed #00ffcc44';
-        li.style.borderRadius = '4px';
-
-        li.innerHTML = `
-          <span><strong>${name}</strong> <span style="color:#00ffcc88">(UID: ${uid})</span></span>
-          <button class="delete-btn" onclick="unbanUser('${uid}')">Unban</button>
-        `;
-        bannedList.appendChild(li);
-      });
-    });
-  }
-
-  function checkAdminPanel() {
-    if (username === 'chrlzs2') {
-      document.getElementById('adminPanel').style.display = 'block';
-      updateBannedUserList();
-      db.ref('banned').on('value', updateBannedUserList);
-    }
-  }
-
-  function getUid() {
-    // Simple UID simulation via localStorage for now
-    if (!localStorage.getItem('chrlzsUid')) {
-      const newId = 'uid-' + Math.random().toString(36).substring(2, 10);
-      localStorage.setItem('chrlzsUid', newId);
-    }
-    return localStorage.getItem('chrlzsUid');
-  }
+  });
 
   db.ref('messages').on('child_added', snapshot => {
     const msg = snapshot.val();
-    const messageId = snapshot.key;
+    const id = snapshot.key;
+    const time = new Date(msg.timestamp).toLocaleTimeString();
+    const isAdmin = username === 'chrlzs2';
+    const isOwner = msg.uid === uid;
 
     const div = document.createElement('div');
     div.classList.add('message');
-
-    const time = new Date(msg.timestamp).toLocaleTimeString();
-    const isAdmin = username === 'chrlzs2';
-    const isOwner = msg.user === username;
-
     div.innerHTML = `
       <span class="username">${msg.user}:</span> ${msg.text}
       <span style="color: #00ffcc66; font-size: 0.8em;"> [${time}]</span>
-      ${(isOwner || isAdmin) ? `<button class="delete-btn" onclick="deleteMessage('${messageId}')">Delete</button>` : ''}
-      ${(isAdmin && msg.uid) ? `<button class="delete-btn" onclick="banUser('${msg.uid}', '${msg.user}')">Ban</button>` : ''}
+      ${(isAdmin || isOwner) ? `<button class="delete-btn" onclick="deleteMessage('${id}')">delete</button>` : ''}
     `;
-
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
 
   db.ref('messages').on('child_removed', snapshot => {
-    const messageId = snapshot.key;
-    const messageElement = [...chatMessages.children].find(el => el.innerHTML.includes(`deleteMessage('${messageId}')`));
-    if (messageElement) messageElement.remove();
+    const id = snapshot.key;
+    const element = [...chatMessages.children].find(el => el.innerHTML.includes(`deleteMessage('${id}')`));
+    if (element) element.remove();
+  });
+
+  db.ref('users').on('value', snapshot => {
+    const users = snapshot.val() || {};
+    userList.innerHTML = '';
+    if (username === 'chrlzs2') {
+      adminPanel.style.display = 'block';
+      for (const u in users) {
+        const user = users[u];
+        const div = document.createElement('div');
+        div.classList.add('admin-user');
+        div.innerHTML = `
+          <span>${user.username} (${user.uid})</span>
+          <button class="ban-btn" onclick="banUser('${user.uid}')">Ban</button>
+        `;
+        userList.appendChild(div);
+      }
+    }
   });
 </script>
 
