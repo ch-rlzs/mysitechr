@@ -10,28 +10,23 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-// Load Firebase App and required services
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Variables
 let username = localStorage.getItem('chrlzsUsername') || '';
 let uid = localStorage.getItem('chrlzsUid') || '';
 let isAdmin = false;
 
-// DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const usernameSection = document.getElementById('usernameSection');
 const messageInput = document.getElementById('messageInput');
 const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
 
-// Anonymous Auth
 firebase.auth().signInAnonymously().catch(error => {
   console.error("Firebase auth error:", error);
 });
 
-// Typing indicator
 let typingTimeout;
 function startTyping() {
   db.ref('typing/' + uid).set(true);
@@ -49,7 +44,6 @@ db.ref('typing').on('value', snapshot => {
   typingIndicator.textContent = active.length ? `${active.join(', ')} are typing...` : '';
 });
 
-// Load messages
 let lastTimestamp = Date.now();
 let loadingMessages = false;
 
@@ -76,7 +70,29 @@ chatMessages.addEventListener('scroll', () => {
   }
 });
 
-// Username
+if (username) {
+  usernameSection.style.display = 'none';
+  if (username === 'chrlzs2') {
+    db.ref('adminPassword').once('value').then(snapshot => {
+      const storedPassword = snapshot.val();
+      const cachedAdmin = localStorage.getItem('isChrlzsAdmin');
+      if (cachedAdmin === 'true') {
+        isAdmin = true;
+        adminPanel.style.display = 'block';
+      } else {
+        const password = prompt("Re-enter admin password:");
+        if (password === storedPassword) {
+          isAdmin = true;
+          localStorage.setItem('isChrlzsAdmin', 'true');
+          adminPanel.style.display = 'block';
+        } else {
+          alert("Incorrect admin password. You will be logged in as a normal user.");
+        }
+      }
+    });
+  }
+}
+
 function setUsername() {
   const inputVal = document.getElementById('usernameInput').value.trim();
   if (!inputVal) return;
@@ -88,6 +104,7 @@ function setUsername() {
       if (password === storedPassword) {
         isAdmin = true;
         adminPanel.style.display = 'block';
+        localStorage.setItem('isChrlzsAdmin', 'true');
         finalizeUsername(inputVal);
       } else {
         alert("Incorrect admin password.");
@@ -104,7 +121,6 @@ function finalizeUsername(name) {
   usernameSection.style.display = 'none';
 }
 
-// Send message
 function sendMessage() {
   const text = messageInput.value.trim();
   if (!text || !username) return;
@@ -127,13 +143,11 @@ function sendMessage() {
   });
 }
 
-// Profanity filter
 function filterExplicit(text) {
   const badWords = ['fuck','shit','bitch','asshole','cunt'];
   return text.replace(new RegExp(badWords.join('|'), 'gi'), w => w[0] + '*'.repeat(w.length-1));
 }
 
-// Append message
 function appendMessage(msg, scroll = true) {
   if (!msg) return;
   const time = new Date(msg.timestamp).toLocaleTimeString();
@@ -148,7 +162,6 @@ function appendMessage(msg, scroll = true) {
   if (scroll) chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Listen for new messages
 let bannedCache = null;
 function bannedUsers() {
   if (!bannedCache) bannedCache = {};
@@ -162,7 +175,6 @@ db.ref('messages').on('child_added', snapshot => {
   appendMessage(msg, true);
 });
 
-// Admin functions
 function deleteMessage(messageId) {
   if (!isAdmin) return;
   db.ref('messages/' + messageId).remove();
@@ -189,5 +201,6 @@ function deleteAllMessages() {
 
 function signOut() {
   localStorage.removeItem('chrlzsUsername');
+  localStorage.removeItem('isChrlzsAdmin');
   location.reload();
 }
