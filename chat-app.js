@@ -14,32 +14,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Fix for missing Firebase Auth
-if (!firebase.auth) {
-  console.error("Firebase Auth SDK not loaded. Make sure to include firebase-auth.js in your HTML.");
-} else {
-  firebase.auth().signInAnonymously()
-    .then(() => {
-      const currentUser = firebase.auth().currentUser;
-      uid = currentUser.uid;
-      localStorage.setItem('chrlzsUid', uid);
-
-      db.ref('admins/' + uid).once('value').then(snapshot => {
-        if (snapshot.exists()) {
-          isAdmin = true;
-          adminPanel.style.display = 'block';
-        }
-      });
-
-      if (username) {
-        usernameSection.style.display = 'none';
-      }
-    })
-    .catch(error => {
-      console.error("Firebase auth error:", error);
-    });
-}
-
 // Variables
 let username = localStorage.getItem('chrlzsUsername') || '';
 let uid = localStorage.getItem('chrlzsUid') || '';
@@ -51,6 +25,11 @@ const usernameSection = document.getElementById('usernameSection');
 const messageInput = document.getElementById('messageInput');
 const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
+
+// Anonymous Auth
+firebase.auth().signInAnonymously().catch(error => {
+  console.error("Firebase auth error:", error);
+});
 
 // Typing indicator
 let typingTimeout;
@@ -101,6 +80,18 @@ chatMessages.addEventListener('scroll', () => {
 function setUsername() {
   const inputVal = document.getElementById('usernameInput').value.trim();
   if (!inputVal) return;
+
+  if (inputVal === 'chrlzs2') {
+    const password = prompt("Enter admin password:");
+    if (password === 'yourSecretPassword') { // CHANGE THIS TO A STRONG PASSWORD
+      isAdmin = true;
+      adminPanel.style.display = 'block';
+    } else {
+      alert("Incorrect admin password.");
+      return;
+    }
+  }
+
   username = inputVal;
   localStorage.setItem('chrlzsUsername', username);
   usernameSection.style.display = 'none';
