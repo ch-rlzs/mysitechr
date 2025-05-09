@@ -10,47 +10,49 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-// Initialize Firebase and Database
+// Load Firebase App and required services
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Retrieve or initialize state variables
+// Fix for missing Firebase Auth
+if (!firebase.auth) {
+  console.error("Firebase Auth SDK not loaded. Make sure to include firebase-auth.js in your HTML.");
+} else {
+  firebase.auth().signInAnonymously()
+    .then(() => {
+      const currentUser = firebase.auth().currentUser;
+      uid = currentUser.uid;
+      localStorage.setItem('chrlzsUid', uid);
+
+      db.ref('admins/' + uid).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+          isAdmin = true;
+          adminPanel.style.display = 'block';
+        }
+      });
+
+      if (username) {
+        usernameSection.style.display = 'none';
+      }
+    })
+    .catch(error => {
+      console.error("Firebase auth error:", error);
+    });
+}
+
+// Variables
 let username = localStorage.getItem('chrlzsUsername') || '';
 let uid = localStorage.getItem('chrlzsUid') || '';
 let isAdmin = false;
 
-// DOM elements
+// DOM Elements
 const chatMessages = document.getElementById('chatMessages');
 const usernameSection = document.getElementById('usernameSection');
 const messageInput = document.getElementById('messageInput');
 const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
 
-// Authenticate anonymously with Firebase
-firebase.auth().signInAnonymously()
-  .then(() => {
-    const currentUser = firebase.auth().currentUser;
-    uid = currentUser.uid;
-    localStorage.setItem('chrlzsUid', uid);
-
-    // Check admin status from Realtime Database
-    db.ref('admins/' + uid).once('value').then(snapshot => {
-      if (snapshot.exists()) {
-        isAdmin = true;
-        adminPanel.style.display = 'block';
-      }
-    });
-
-    // Hide username input if previously set
-    if (username) {
-      usernameSection.style.display = 'none';
-    }
-  })
-  .catch(error => {
-    console.error("Firebase auth error:", error);
-  });
-
-// Typing indicator logic
+// Typing indicator
 let typingTimeout;
 function startTyping() {
   db.ref('typing/' + uid).set(true);
@@ -68,16 +70,9 @@ db.ref('typing').on('value', snapshot => {
   typingIndicator.textContent = active.length ? `${active.join(', ')} are typing...` : '';
 });
 
-// Load messages and handle scrolling
+// Load messages
 let lastTimestamp = Date.now();
 let loadingMessages = false;
-
-ingestOlderMessages();
-chatMessages.addEventListener('scroll', () => {
-  if (chatMessages.scrollTop === 0 && !loadingMessages) {
-    ingestOlderMessages();
-  }
-});
 
 function ingestOlderMessages() {
   loadingMessages = true;
@@ -96,7 +91,13 @@ function ingestOlderMessages() {
     });
 }
 
-// Set username
+chatMessages.addEventListener('scroll', () => {
+  if (chatMessages.scrollTop === 0 && !loadingMessages) {
+    ingestOlderMessages();
+  }
+});
+
+// Username
 function setUsername() {
   const inputVal = document.getElementById('usernameInput').value.trim();
   if (!inputVal) return;
@@ -105,7 +106,7 @@ function setUsername() {
   usernameSection.style.display = 'none';
 }
 
-// Send message with ban check
+// Send message
 function sendMessage() {
   const text = messageInput.value.trim();
   if (!text || !username) return;
@@ -134,9 +135,9 @@ function filterExplicit(text) {
   return text.replace(new RegExp(badWords.join('|'), 'gi'), w => w[0] + '*'.repeat(w.length-1));
 }
 
-// Append message to chat window
+// Append message
 function appendMessage(msg, scroll = true) {
-  if (!msg || (!isAdmin && msg.user in (bannedUsers()))) return;
+  if (!msg) return;
   const time = new Date(msg.timestamp).toLocaleTimeString();
   const div = document.createElement('div');
   div.className = 'message';
@@ -163,19 +164,17 @@ db.ref('messages').on('child_added', snapshot => {
   appendMessage(msg, true);
 });
 
-// Admin: delete single message
+// Admin functions
 function deleteMessage(messageId) {
   if (!isAdmin) return;
   db.ref('messages/' + messageId).remove();
 }
 
-// Admin: ban user
 function banUser(userToBan) {
   if (!isAdmin) return;
   db.ref('bannedUsers/' + userToBan).set(true);
 }
 
-// Admin: show banned users
 function showBannedUsers() {
   if (!isAdmin) return;
   db.ref('bannedUsers').once('value').then(snapshot => {
@@ -184,14 +183,12 @@ function showBannedUsers() {
   });
 }
 
-// Admin: delete all messages
 function deleteAllMessages() {
   if (isAdmin && confirm('Are you sure you want to delete all messages?')) {
     db.ref('messages').remove();
   }
 }
 
-// Sign out user
 function signOut() {
   localStorage.removeItem('chrlzsUsername');
   location.reload();
