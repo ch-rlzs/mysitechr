@@ -101,11 +101,12 @@
   <button onclick="sendMessage()">Send</button>
   <button onclick="signOut()" style="margin-top:10px;">Sign Out</button>
 
-  <div class="admin-panel" id="adminPanel" style="display:none;">
+  <div id="adminPanel" style="display:none;">
     <h3>🛠 Admin Panel</h3>
-    <div id="userList"></div>
-  </div>
+    <button onclick="banUser('exampleUser')">Ban User Example</button>
+    <button onclick="showBannedUsers()">Show Banned Users</button>
 </div>
+
 
 <script src="chat-app.js"></script> <!-- Linking the JS file -->
 
