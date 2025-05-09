@@ -22,18 +22,18 @@
       border-radius: 8px;
       padding: 20px;
       box-shadow: 0 0 15px #00ffcc22;
-      white-space: pre-wrap;
     }
 
-    pre {
-      margin: 0;
-      padding: 0;
+    .directory-view {
       line-height: 1.4;
+      padding: 5px 0;
     }
 
     .file {
       cursor: pointer;
       color: #00ffcc;
+      display: block;
+      padding: 2px 0;
     }
 
     .file:hover {
@@ -44,6 +44,8 @@
     .folder {
       cursor: pointer;
       color: #00aaff;
+      display: block;
+      padding: 2px 0;
     }
 
     .folder:hover {
@@ -52,16 +54,17 @@
     }
 
     .output {
-      margin-top: 20px;
+      margin-top: 15px;
       color: #00ffaa;
       border-top: 1px dashed #00ffcc44;
       padding-top: 10px;
+      min-height: 20px;
     }
 
     .command-line {
       display: flex;
       align-items: center;
-      margin-top: 20px;
+      margin-top: 15px;
     }
 
     #inputPrompt {
@@ -72,37 +75,45 @@
       font-size: 1em;
       width: 100%;
       outline: none;
+      padding: 5px;
     }
 
     .hidden {
       display: none;
     }
 
-    .expandable::before {
-      content: "+ ";
+    .expand-icon {
       color: #00ff77;
       font-weight: bold;
+      margin-right: 5px;
     }
 
-    .expanded::before {
-      content: "- ";
+    .indent {
+      margin-left: 20px;
     }
   </style>
 </head>
 <body>
 
   <div class="terminal">
-    <pre id="directoryListing">/root
-└── <span class="folder expandable" onclick="toggleFolder('projects', this)">projects/</span></pre>
-
-    <div id="projects-contents" class="hidden">
-      <pre>   ├── <span class="folder expandable" onclick="toggleFolder('chat', this)">chat/</span>
-   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span></pre>
-      
-      <div id="chat-contents" class="hidden">
-        <pre>      ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
-      ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
-      └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span></pre>
+    <div class="directory-view">
+      <div>/root</div>
+      <div class="indent">
+        <span class="folder" onclick="toggleFolder('projects')">
+          <span class="expand-icon">+</span>projects/
+        </span>
+        <div id="projects-contents" class="hidden indent">
+          <span class="folder" onclick="toggleFolder('chat')">
+            <span class="expand-icon">+</span>chat/
+          </span>
+          <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span>
+          
+          <div id="chat-contents" class="hidden indent">
+            <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
+            <span class="file" onclick="navigate('N/A')">bot1/</span>
+            <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -115,27 +126,28 @@
   </div>
 
   <script>
-    function toggleFolder(folderName, element) {
+    function toggleFolder(folderName) {
       const contentsDiv = document.getElementById(`${folderName}-contents`);
+      const icon = contentsDiv.previousElementSibling.querySelector('.expand-icon');
+      
       if (contentsDiv.classList.contains('hidden')) {
         contentsDiv.classList.remove('hidden');
-        element.classList.add('expanded');
-        document.getElementById('output').innerHTML = `<pre>Opening ${folderName}/...</pre>`;
+        icon.textContent = '-';
+        document.getElementById('output').innerHTML = `<div>Opening ${folderName}/...</div>`;
       } else {
         contentsDiv.classList.add('hidden');
-        element.classList.remove('expanded');
+        icon.textContent = '+';
       }
     }
 
     function navigate(path) {
       const output = document.getElementById('output');
+      output.innerHTML = `<div>Navigating to ${path === 'N/A' ? 'unavailable project' : path}...</div>`;
+      
       if (path !== 'N/A') {
-        output.innerHTML = `<pre>Opening ${path}...</pre>`;
         setTimeout(() => {
           window.open(path, '_blank');
         }, 300);
-      } else {
-        output.innerHTML = `<pre>This project is not currently available</pre>`;
       }
     }
 
@@ -145,18 +157,18 @@
         const output = document.getElementById('output');
 
         if (cmd === 'bope secret') {
-          output.innerHTML = `<pre>i love evie</pre>`;
+          output.innerHTML = `<div>i love evie</div>`;
         } else if (cmd === 'ls') {
-          output.innerHTML = `<pre>projects/</pre>`;
+          output.innerHTML = `<div>projects/</div>`;
         } else if (cmd === 'clear') {
           output.innerHTML = '';
         } else if (cmd === 'help') {
-          output.innerHTML = `<pre>Available commands:
+          output.innerHTML = `<div>Available commands:
 ls - List directory contents
 clear - Clear terminal
-bope secret - Easter egg</pre>`;
+bope secret - Easter egg</div>`;
         } else {
-          output.innerHTML = `<pre>command not found: ${cmd}</pre>`;
+          output.innerHTML = `<div>command not found: ${cmd}</div>`;
         }
 
         e.target.value = '';
