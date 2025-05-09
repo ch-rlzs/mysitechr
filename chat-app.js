@@ -22,6 +22,8 @@ const usernameSection = document.getElementById('usernameSection');
 const messageInput = document.getElementById('messageInput');
 const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
+const usernameInput = document.getElementById('usernameInput');
+const currentUserDisplay = document.getElementById('currentUserDisplay');
 
 firebase.auth().signInAnonymously().catch(error => {
   console.error("Firebase auth error:", error);
@@ -72,6 +74,8 @@ chatMessages.addEventListener('scroll', () => {
 
 if (username) {
   usernameSection.style.display = 'none';
+  usernameInput.disabled = true;
+  currentUserDisplay.textContent = `Logged in as: ${username}`;
   if (username === 'chrlzs2') {
     db.ref('adminPassword').once('value').then(snapshot => {
       const storedPassword = snapshot.val();
@@ -94,7 +98,7 @@ if (username) {
 }
 
 function setUsername() {
-  const inputVal = document.getElementById('usernameInput').value.trim();
+  const inputVal = usernameInput.value.trim();
   if (!inputVal) return;
 
   if (inputVal === 'chrlzs2') {
@@ -119,6 +123,8 @@ function finalizeUsername(name) {
   username = name;
   localStorage.setItem('chrlzsUsername', username);
   usernameSection.style.display = 'none';
+  usernameInput.disabled = true;
+  currentUserDisplay.textContent = `Logged in as: ${username}`;
 }
 
 function sendMessage() {
