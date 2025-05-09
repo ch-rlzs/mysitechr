@@ -83,16 +83,23 @@ function setUsername() {
 
   if (inputVal === 'chrlzs2') {
     const password = prompt("Enter admin password:");
-    if (password === 'yourSecretPassword') { // CHANGE THIS TO A STRONG PASSWORD
-      isAdmin = true;
-      adminPanel.style.display = 'block';
-    } else {
-      alert("Incorrect admin password.");
-      return;
-    }
+    db.ref('adminPassword').once('value').then(snapshot => {
+      const storedPassword = snapshot.val();
+      if (password === storedPassword) {
+        isAdmin = true;
+        adminPanel.style.display = 'block';
+        finalizeUsername(inputVal);
+      } else {
+        alert("Incorrect admin password.");
+      }
+    });
+  } else {
+    finalizeUsername(inputVal);
   }
+}
 
-  username = inputVal;
+function finalizeUsername(name) {
+  username = name;
   localStorage.setItem('chrlzsUsername', username);
   usernameSection.style.display = 'none';
 }
