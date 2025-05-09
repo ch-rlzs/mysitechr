@@ -39,6 +39,16 @@
       color: #ffffff;
     }
 
+    .folder {
+      cursor: pointer;
+      color: #00aaff;
+    }
+
+    .folder:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
     .output {
       margin-top: 20px;
       color: #00ffaa;
@@ -80,14 +90,14 @@
 <body>
 
   <div class="terminal">
-<pre>/root
-├── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">projects/</span>
-│   ├── chat/
+    <pre id="directoryListing">/root
+├── <span class="folder" onclick="openFolder('projects')">projects/</span>
+│   ├── <span class="folder" onclick="openFolder('chat')">chat/</span>
 │   │   ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
 │   │   ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
 │   │   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span>
 │   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span>
->
+└── <span class="folder" onclick="openFolder('about')">about.txt</span></pre>
 
     <div class="output" id="output"></div>
 
@@ -98,9 +108,50 @@
   </div>
 
   <script>
+    const folderContents = {
+      'projects': `<pre>/root/projects
+├── <span class="folder" onclick="openFolder('chat')">chat/</span>
+│   ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
+│   ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
+│   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span>
+└── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span></pre>`,
+      
+      'chat': `<pre>/root/projects/chat
+├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
+├── <span class="file" onclick="navigate('N/A')">bot1/</span>
+└── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span></pre>`,
+      
+      'about': `<pre>about.txt
+
+Welcome to chrlzs' terminal interface.
+This is a interactive portfolio showcasing various projects.
+Type 'help' for available commands.</pre>`
+    };
+
+    function openFolder(folderName) {
+      const output = document.getElementById('output');
+      output.innerHTML = `<pre>Opening ${folderName}...</pre>`;
+      
+      setTimeout(() => {
+        if (folderContents[folderName]) {
+          document.getElementById('directoryListing').innerHTML = folderContents[folderName];
+          output.innerHTML += `<pre>${folderName} contents loaded</pre>`;
+        } else {
+          output.innerHTML += `<pre>Error: Could not open ${folderName}</pre>`;
+        }
+      }, 300);
+    }
+
     function navigate(path) {
       const output = document.getElementById('output');
-      output.innerHTML = `<pre>Opening ${path}...\n<a href="${path}" target="_blank">${path}</a></pre>`;
+      if (path !== 'N/A') {
+        output.innerHTML = `<pre>Navigating to ${path}...</pre>`;
+        setTimeout(() => {
+          window.open(path, '_blank');
+        }, 500);
+      } else {
+        output.innerHTML = `<pre>This project is not currently available</pre>`;
+      }
     }
 
     function handleCommand(e) {
@@ -112,6 +163,13 @@
           output.innerHTML = `<pre>i love evie</pre>`;
         } else if (cmd === 'ls') {
           output.innerHTML = `<pre>projects/\nabout.txt</pre>`;
+        } else if (cmd === 'clear') {
+          output.innerHTML = '';
+        } else if (cmd === 'help') {
+          output.innerHTML = `<pre>Available commands:
+ls - List directory contents
+clear - Clear terminal
+bope secret - Easter egg</pre>`;
         } else {
           output.innerHTML = `<pre>command not found: ${cmd}</pre>`;
         }
