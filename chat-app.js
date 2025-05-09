@@ -23,9 +23,20 @@ const usernameSection = document.getElementById('usernameSection');
 const messageInput = document.getElementById('messageInput');
 const typingIndicator = document.getElementById('typingIndicator');
 
+// Admin check for username "chrlzs"
+const isAdmin = username === "chrlzs"; // Check if the user is admin
+
 let typingTimeout;
 let lastTimestamp = Date.now();
 let loadingMessages = false;
+
+// Display admin panel if the user is an admin
+const adminPanel = document.getElementById('adminPanel');
+if (isAdmin) {
+  adminPanel.style.display = 'block'; // Show the admin panel
+} else {
+  adminPanel.style.display = 'none'; // Hide the admin panel
+}
 
 // Typing Indicator Logic
 function startTyping() {
@@ -109,7 +120,16 @@ function sendMessage() {
     timestamp: Date.now()
   };
 
-  db.ref('messages').push(message);
+  // Check if the user is banned
+  db.ref('bannedUsers').once('value', snapshot => {
+    const bannedUsers = snapshot.val() || [];
+    if (bannedUsers.includes(username)) {
+      alert("You are banned from sending messages.");
+      return;
+    }
+    db.ref('messages').push(message);
+  });
+
   input.value = '';
 }
 
@@ -125,15 +145,49 @@ db.ref('messages').on('child_added', snapshot => {
   const msg = snapshot.val();
   const messageId = snapshot.key;
 
-  const div = document.createElement('div');
-  div.classList.add('message');
-  const time = new Date(msg.timestamp).toLocaleTimeString();
+  // Skip banned users' messages
+  db.ref('bannedUsers').once('value', snapshot => {
+    const bannedUsers = snapshot.val() || [];
+    if (bannedUsers.includes(msg.user)) {
+      return;
+    }
 
-  div.innerHTML = `
-    <span class="username">${msg.user}:</span> ${msg.text}
-    <span style="color: #00ffcc66; font-size: 0.8em;"> [${time}]</span>
-  `;
+    const div = document.createElement('div');
+    div.classList.add('message');
+    const time = new Date(msg.timestamp).toLocaleTimeString();
 
-  chatMessages.appendChild(div);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+    div.innerHTML = `
+      <span class="username">${msg.user}:</span> ${msg.text}
+      <span style="color: #00ffcc66; font-size: 0.8em;"> [${time}]</span>
+      ${(isAdmin) ? `<button class="delete-btn" onclick="deleteMessage('${messageId}')">delete</button>` : ''}
+    `;
+
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 });
+
+// Delete a message
+function deleteMessage(messageId) {
+  db.ref('messages/' + messageId).remove();
+}
+
+// Admin Ban User
+function banUser(username) {
+  db.ref('bannedUsers').once('value', snapshot => {
+    const bannedUsers = snapshot.val() || [];
+    if (!bannedUsers.includes(username)) {
+      bannedUsers.push(username);
+      db.ref('bannedUsers').set(bannedUsers);
+      alert(`${username} has been banned.`);
+    }
+  });
+}
+
+// Show the banned users list for admins
+function showBannedUsers() {
+  db.ref('bannedUsers').once('value', snapshot => {
+    const bannedUsers = snapshot.val() || [];
+    alert(`Banned Users: ${bannedUsers.join(', ')}`);
+  });
+}
