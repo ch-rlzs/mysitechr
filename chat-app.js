@@ -182,6 +182,11 @@ db.ref('messages').on('child_added', snapshot => {
 function deleteMessage(messageId) {
   db.ref('messages/' + messageId).remove();
 }
+function deleteAllMessages() {
+  if (isAdmin && confirm("Are you sure you want to delete all messages?")) {
+    db.ref('messages').remove();
+  }
+}
 
 // Ban user
 function banUser(userToBan) {
