@@ -33,10 +33,12 @@
 
     .file {
       cursor: pointer;
+      color: #00ffcc;
     }
 
     .file:hover {
       color: #ffffff;
+      text-decoration: underline;
     }
 
     .folder {
@@ -72,18 +74,18 @@
       outline: none;
     }
 
-    a {
-      color: #00ffcc;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
     .hidden {
-      color: #00ffcc99;
-      font-style: italic;
+      display: none;
+    }
+
+    .expandable::before {
+      content: "+ ";
+      color: #00ff77;
+      font-weight: bold;
+    }
+
+    .expanded::before {
+      content: "- ";
     }
   </style>
 </head>
@@ -91,13 +93,18 @@
 
   <div class="terminal">
     <pre id="directoryListing">/root
-├── <span class="folder" onclick="openFolder('projects')">projects/</span>
-│   ├── <span class="folder" onclick="openFolder('chat')">chat/</span>
-│   │   ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
-│   │   ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
-│   │   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span>
-│   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span>
-└── <span class="folder" onclick="openFolder('about')">about.txt</span></pre>
+└── <span class="folder expandable" onclick="toggleFolder('projects', this)">projects/</span></pre>
+
+    <div id="projects-contents" class="hidden">
+      <pre>   ├── <span class="folder expandable" onclick="toggleFolder('chat', this)">chat/</span>
+   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span></pre>
+      
+      <div id="chat-contents" class="hidden">
+        <pre>      ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
+      ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
+      └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span></pre>
+      </div>
+    </div>
 
     <div class="output" id="output"></div>
 
@@ -108,47 +115,25 @@
   </div>
 
   <script>
-    const folderContents = {
-      'projects': `<pre>/root/projects
-├── <span class="folder" onclick="openFolder('chat')">chat/</span>
-│   ├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
-│   ├── <span class="file" onclick="navigate('N/A')">bot1/</span>
-│   └── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span>
-└── <span class="file" onclick="navigate('https://chrlzschat.onrender.com')">website/</span></pre>`,
-      
-      'chat': `<pre>/root/projects/chat
-├── <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat/</span>
-├── <span class="file" onclick="navigate('N/A')">bot1/</span>
-└── <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy/</span></pre>`,
-      
-      'about': `<pre>about.txt
-
-Welcome to chrlzs' terminal interface.
-This is a interactive portfolio showcasing various projects.
-Type 'help' for available commands.</pre>`
-    };
-
-    function openFolder(folderName) {
-      const output = document.getElementById('output');
-      output.innerHTML = `<pre>Opening ${folderName}...</pre>`;
-      
-      setTimeout(() => {
-        if (folderContents[folderName]) {
-          document.getElementById('directoryListing').innerHTML = folderContents[folderName];
-          output.innerHTML += `<pre>${folderName} contents loaded</pre>`;
-        } else {
-          output.innerHTML += `<pre>Error: Could not open ${folderName}</pre>`;
-        }
-      }, 300);
+    function toggleFolder(folderName, element) {
+      const contentsDiv = document.getElementById(`${folderName}-contents`);
+      if (contentsDiv.classList.contains('hidden')) {
+        contentsDiv.classList.remove('hidden');
+        element.classList.add('expanded');
+        document.getElementById('output').innerHTML = `<pre>Opening ${folderName}/...</pre>`;
+      } else {
+        contentsDiv.classList.add('hidden');
+        element.classList.remove('expanded');
+      }
     }
 
     function navigate(path) {
       const output = document.getElementById('output');
       if (path !== 'N/A') {
-        output.innerHTML = `<pre>Navigating to ${path}...</pre>`;
+        output.innerHTML = `<pre>Opening ${path}...</pre>`;
         setTimeout(() => {
           window.open(path, '_blank');
-        }, 500);
+        }, 300);
       } else {
         output.innerHTML = `<pre>This project is not currently available</pre>`;
       }
@@ -162,7 +147,7 @@ Type 'help' for available commands.</pre>`
         if (cmd === 'bope secret') {
           output.innerHTML = `<pre>i love evie</pre>`;
         } else if (cmd === 'ls') {
-          output.innerHTML = `<pre>projects/\nabout.txt</pre>`;
+          output.innerHTML = `<pre>projects/</pre>`;
         } else if (cmd === 'clear') {
           output.innerHTML = '';
         } else if (cmd === 'help') {
