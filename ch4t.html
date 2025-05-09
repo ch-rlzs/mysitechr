@@ -42,6 +42,12 @@
       color: #00ffaa;
     }
 
+    .timestamp {
+      color: #888;
+      font-size: 0.8em;
+      margin-left: 6px;
+    }
+
     input[type="text"] {
       width: calc(100% - 20px);
       padding: 10px;
@@ -83,7 +89,6 @@
 </div>
 
 <script>
-  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
     authDomain: "chrlzs-chat-645cf.firebaseapp.com",
@@ -95,7 +100,6 @@
     measurementId: "G-5XW702X3TQ"
   };
 
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
@@ -108,23 +112,37 @@
     usernameSection.style.display = 'none';
   }
 
+  function formatTimestamp(ms) {
+    const date = new Date(ms);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function censorMessage(text) {
+    const badWords = ['fuck', 'shit', 'bitch', 'asshole', 'dick', 'cunt'];
+    const pattern = new RegExp(`\\b(${badWords.join('|')})\\b`, 'gi');
+    return text.replace(pattern, word => word[0] + '*'.repeat(word.length - 1));
+  }
+
   function setUsername() {
     const input = document.getElementById('usernameInput').value.trim();
-    if (input) {
-      username = input;
-      localStorage.setItem('chrlzsUsername', username);
-      usernameSection.style.display = 'none';
+    if (input.length < 3) {
+      alert('Username must be at least 3 characters long.');
+      return;
     }
+    username = input;
+    localStorage.setItem('chrlzsUsername', username);
+    usernameSection.style.display = 'none';
   }
 
   function sendMessage() {
     const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-    if (!text || !username) return;
+    const rawText = input.value.trim();
+    if (!rawText || !username) return;
 
+    const cleanText = censorMessage(rawText);
     const message = {
       user: username,
-      text: text,
+      text: cleanText,
       timestamp: Date.now()
     };
 
@@ -136,7 +154,7 @@
     const msg = snapshot.val();
     const div = document.createElement('div');
     div.classList.add('message');
-    div.innerHTML = `<span class="username">${msg.user}:</span> ${msg.text}`;
+    div.innerHTML = `<span class="username">${msg.user}:</span> ${msg.text} <span class="timestamp">${formatTimestamp(msg.timestamp)}</span>`;
     chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
