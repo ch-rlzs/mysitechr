@@ -48,7 +48,37 @@ if (username) {
     isAdmin = true;
     adminPanel.style.display = 'block';
   }
-}
+}firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let username = localStorage.getItem('chrlzsUsername') || '';
+let uid = localStorage.getItem('chrlzsUid') || '';
+let isAdmin = false;
+
+const chatMessages = document.getElementById('chatMessages');
+const usernameSection = document.getElementById('usernameSection');
+const messageInput = document.getElementById('messageInput');
+const typingIndicator = document.getElementById('typingIndicator');
+const adminPanel = document.getElementById('adminPanel');
+
+// Anonymous sign-in
+firebase.auth().signInAnonymously().then(() => {
+  const user = firebase.auth().currentUser;
+  uid = user.uid;
+  localStorage.setItem('chrlzsUid', uid);
+
+  // Check if this UID is an admin
+  db.ref('admins/' + uid).once('value').then(snapshot => {
+    if (snapshot.exists()) {
+      isAdmin = true;
+      adminPanel.style.display = 'block';
+    }
+  });
+
+  if (username) {
+    usernameSection.style.display = 'none';
+  }
+});
 
 // Typing logic
 function startTyping() {
