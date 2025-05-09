@@ -10,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-fifirebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 firebase.auth().signInAnonymously().then(() => {
   const currentUser = firebase.auth().currentUser;
   uid = currentUser.uid;
