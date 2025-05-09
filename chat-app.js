@@ -11,6 +11,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 firebase.auth().signInAnonymously().then(() => {
   const currentUser = firebase.auth().currentUser;
   uid = currentUser.uid;
@@ -23,7 +24,7 @@ firebase.auth().signInAnonymously().then(() => {
     }
   });
 });rebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+
 
 let username = localStorage.getItem('chrlzsUsername');
 let uid = localStorage.getItem('chrlzsUid') || crypto.randomUUID();
