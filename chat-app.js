@@ -39,10 +39,18 @@ if (isAdmin) {
 }
 
 // Typing Indicator Logic
-function startTyping() {
-  db.ref('typing/' + uid).set(true);
-  if (typingTimeout) clearTimeout(typingTimeout);
-  typingTimeout = setTimeout(stopTyping, 2000);  // Stop typing after 2 seconds
+function setUsername() {
+  const input = document.getElementById('usernameInput').value.trim();
+  if (input) {
+    username = input;
+    localStorage.setItem('chrlzsUsername', username);
+    usernameSection.style.display = 'none';
+
+    // Admin logic AFTER username is set
+    if (username === "chrlzs2") {
+      adminPanel.style.display = 'block';
+    }
+  }
 }
 
 function stopTyping() {
