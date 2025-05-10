@@ -123,25 +123,59 @@
     @keyframes glitchFadeOut {
       0% {
         opacity: 1;
-        transform: translateX(0) skewX(0deg);
-        filter: hue-rotate(0deg);
+        text-shadow: 0 0 5px var(--neon-green);
+        transform: translateX(0);
       }
-      25% {
-        transform: translateX(-5px) skewX(-5deg);
-        filter: hue-rotate(90deg);
+      10% {
+        opacity: 0.8;
+        text-shadow: 5px 0 5px var(--glitch-pink), -5px 0 5px var(--neon-green);
+        transform: translateX(-5px);
+      }
+      20% {
+        opacity: 0.6;
+        text-shadow: -5px 0 5px var(--glitch-pink), 5px 0 5px var(--neon-green);
+        transform: translateX(5px);
+      }
+      30% {
+        opacity: 0.7;
+        text-shadow: 3px 0 5px var(--glitch-pink), -3px 0 5px var(--neon-green);
+        transform: translateX(-3px);
+      }
+      40% {
+        opacity: 0.5;
+        text-shadow: -3px 0 5px var(--glitch-pink), 3px 0 5px var(--neon-green);
+        transform: translateX(3px);
       }
       50% {
-        transform: translateX(5px) skewX(5deg);
-        filter: hue-rotate(180deg);
+        opacity: 0.3;
+        text-shadow: 8px 0 5px var(--glitch-pink), -8px 0 5px var(--neon-green);
+        transform: translateX(-8px);
       }
-      75% {
-        transform: translateX(-3px) skewX(-3deg);
-        filter: hue-rotate(270deg);
+      60% {
+        opacity: 0.4;
+        text-shadow: -8px 0 5px var(--glitch-pink), 8px 0 5px var(--neon-green);
+        transform: translateX(8px);
+      }
+      70% {
+        opacity: 0.2;
+        text-shadow: 5px 0 5px var(--glitch-pink), -5px 0 5px var(--neon-green);
+        transform: translateX(-5px);
+      }
+      80% {
+        opacity: 0.1;
+        text-shadow: -5px 0 5px var(--glitch-pink), 5px 0 5px var(--neon-green);
+        transform: translateX(5px);
+      }
+      90% {
+        opacity: 0.05;
+        text-shadow: 3px 0 5px var(--glitch-pink), -3px 0 5px var(--neon-green);
+        transform: translateX(-3px);
       }
       100% {
         opacity: 0;
-        transform: translateX(0) skewX(0deg);
-        filter: hue-rotate(360deg);
+        text-shadow: none;
+        transform: translateX(0);
+        display: none;
       }
     }
   </style>
@@ -190,6 +224,112 @@
   </script>
 
   <!-- Particles Config -->
-  <script src="particles.js"></script>
+  <script>
+    particlesJS("particles-js", {
+      "particles": {
+        "number": {
+          "value": 80,
+          "density": {
+            "enable": true,
+            "value_area": 800
+          }
+        },
+        "color": {
+          "value": "#00ffcc"
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          },
+          "polygon": {
+            "nb_sides": 5
+          }
+        },
+        "opacity": {
+          "value": 0.5,
+          "random": false,
+          "anim": {
+            "enable": false,
+            "speed": 1,
+            "opacity_min": 0.1,
+            "sync": false
+          }
+        },
+        "size": {
+          "value": 3,
+          "random": true,
+          "anim": {
+            "enable": false,
+            "speed": 40,
+            "size_min": 0.1,
+            "sync": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 150,
+          "color": "#00ffcc",
+          "opacity": 0.4,
+          "width": 1
+        },
+        "move": {
+          "enable": true,
+          "speed": 2,
+          "direction": "none",
+          "random": false,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false,
+          "attract": {
+            "enable": false,
+            "rotateX": 600,
+            "rotateY": 1200
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": true,
+            "mode": "grab"
+          },
+          "onclick": {
+            "enable": true,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 140,
+            "line_linked": {
+              "opacity": 1
+            }
+          },
+          "bubble": {
+            "distance": 400,
+            "size": 40,
+            "duration": 2,
+            "opacity": 8,
+            "speed": 3
+          },
+          "repulse": {
+            "distance": 200,
+            "duration": 0.4
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true
+    });
+  </script>
 </body>
 </html>
