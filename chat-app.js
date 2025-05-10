@@ -186,9 +186,20 @@ function deleteMessage(messageId) {
   db.ref('messages/' + messageId).remove();
 }
 
-function banUser(userToBan) {
+function banUser() {
   if (!isAdmin) return;
-  db.ref('bannedUsers/' + userToBan).set(true);
+  
+  const userToBan = document.getElementById('userToBanInput').value.trim();
+  if (!userToBan) {
+    alert("Please enter a username to ban");
+    return;
+  }
+
+  if (confirm(`Are you sure you want to ban ${userToBan}?`)) {
+    db.ref('bannedUsers/' + userToBan).set(true);
+    document.getElementById('userToBanInput').value = '';
+    alert(`${userToBan} has been banned`);
+  }
 }
 
 function showBannedUsers() {
