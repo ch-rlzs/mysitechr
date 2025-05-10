@@ -1,152 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>chrlzs@dedsec:/root</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-  <style>
-    body {
-      background-color: #0a0a0a;
-      color: #00ffcc;
-      font-family: 'Fira Code', monospace;
-      margin: 0;
-      padding: 40px;
-    }
-
-    .terminal {
-      max-width: 900px;
-      margin: auto;
-      background-color: #0f0f0f;
-      border: 1px solid #00ffcc44;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 0 15px #00ffcc22;
-    }
-
-    .directory-view {
-      line-height: 1.4;
-      padding: 5px 0;
-    }
-
-    .file {
-      cursor: pointer;
-      color: #00ffcc;
-      display: block;
-      padding: 2px 0;
-    }
-
-    .file:hover {
-      color: #ffffff;
-      text-decoration: underline;
-    }
-
-    .folder {
-      cursor: pointer;
-      color: #00aaff;
-      display: block;
-      padding: 2px 0;
-    }
-
-    .folder:hover {
-      color: #ffffff;
-      text-decoration: underline;
-    }
-
-    .output {
-      margin-top: 15px;
-      color: #00ffaa;
-      border-top: 1px dashed #00ffcc44;
-      padding-top: 10px;
-      min-height: 20px;
-    }
-
-    .command-line {
-      display: flex;
-      align-items: center;
-      margin-top: 15px;
-    }
-
-    #inputPrompt {
-      background: transparent;
-      border: none;
-      color: #00ffcc;
-      font-family: 'Fira Code', monospace;
-      font-size: 1em;
-      width: 100%;
-      outline: none;
-      padding: 5px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .expand-icon {
-      color: #00ff77;
-      font-weight: bold;
-      margin-right: 5px;
-    }
-
-    .indent {
-      margin-left: 20px;
-    }
-
-    /* Typing animation styles */
-    .typing-cursor {
-      display: inline-block;
-      width: 10px;
-      height: 15px;
-      background-color: #00ffcc;
-      animation: blink 1s infinite;
-      margin-left: 3px;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    .typing-text {
-      display: inline;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="terminal">
-    <div id="boot-sequence"></div>
-    
-    <div class="directory-view" id="directory-view" style="display: none;">
-      <div>/root</div>
-      <div class="indent">
-        <span class="folder" onclick="toggleFolder('projects')">
-          <span class="expand-icon">+</span>projects/
-        </span>
-        <div id="projects-contents" class="hidden indent">
-          <span class="folder" onclick="toggleFolder('chat')">
-            <span class="expand-icon">+</span>things/
-          </span>
-          
-          <div id="chat-contents" class="hidden indent">
-            <span class="file" onclick="navigate('https://chrlzs.fun/ch4t')">Chat</span>
-            <span class="file" onclick="navigate('https://chrlzs.fun/chatbot')">AI bot (very bad rn)</span>
-            <span class="file" onclick="navigate('https://chrlzschat.onrender.com/')">legacy</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="output" id="output"></div>
-
-    <div class="command-line" id="command-line" style="display: none;">
-      <span>@chizled:/root$&nbsp;</span>
-      <input type="text" id="inputPrompt" autocomplete="off" autofocus onkeydown="handleCommand(event)">
-    </div>
-  </div>
-
-  <script>
-    // Boot sequence typing animation
+<script>
+    // Human-like typing animation
     const bootMessages = [
       "Initializing system...",
       "Checking security protocols...",
@@ -159,26 +12,66 @@
     const directoryView = document.getElementById('directory-view');
     const commandLine = document.getElementById('command-line');
 
-    async function typeWriter(text, element, speed = 50) {
-      return new Promise(resolve => {
-        let i = 0;
-        const typing = setInterval(() => {
-          if (i < text.length) {
-            element.innerHTML = element.innerHTML.slice(0, -7) + text.charAt(i) + `<span class="typing-cursor"></span>`;
-            i++;
-          } else {
-            clearInterval(typing);
-            element.innerHTML += `<br>`;
-            resolve();
+    async function humanType(text, element) {
+      return new Promise(async (resolve) => {
+        let currentText = element.innerHTML.replace(/<span class="typing-cursor"><\/span>/g, '');
+        element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
+        
+        // Random typing speed variation (80-150ms)
+        const baseSpeed = 80 + Math.random() * 70;
+        
+        // Sometimes make a "mistake" and correct it (20% chance for longer words)
+        let willMakeMistake = text.length > 8 && Math.random() < 0.2;
+        let mistakeIndex = willMakeMistake ? Math.floor(text.length * 0.7) : -1;
+        let mistakeCorrected = false;
+        
+        for (let i = 0; i < text.length; i++) {
+          // Random slight speed variation for each character
+          const charSpeed = baseSpeed * (0.8 + Math.random() * 0.4);
+          
+          // Pause slightly longer at certain characters
+          const pauseMultiplier = ['.', ',', ' ', ':'].includes(text[i]) ? 2.5 : 1;
+          
+          await new Promise(r => setTimeout(r, charSpeed * pauseMultiplier));
+          
+          // Make a "typing mistake" (type wrong character then correct)
+          if (willMakeMistake && i >= mistakeIndex && !mistakeCorrected) {
+            const wrongChar = String.fromCharCode(text.charCodeAt(i) + 1);
+            currentText = currentText + wrongChar;
+            element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
+            
+            // Pause briefly on the mistake
+            await new Promise(r => setTimeout(r, baseSpeed * 3));
+            
+            // Backspace and type correct character
+            currentText = currentText.slice(0, -1);
+            element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
+            await new Promise(r => setTimeout(r, baseSpeed * 0.7));
+            
+            mistakeCorrected = true;
           }
-        }, speed);
+          
+          currentText = currentText + text[i];
+          element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
+        }
+        
+        // Final pause at end of line (longer for some lines)
+        const endPause = text.endsWith('...') ? 500 : 200;
+        await new Promise(r => setTimeout(r, endPause));
+        
+        element.innerHTML = currentText + `<br>`;
+        resolve();
       });
     }
 
     async function runBootSequence() {
+      bootSequence.innerHTML = `<span class="typing-cursor"></span>`;
+      
       for (const message of bootMessages) {
-        await typeWriter(message, bootSequence);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await humanType(message, bootSequence);
+        
+        // Random pause between lines (100-400ms)
+        await new Promise(r => setTimeout(r, 100 + Math.random() * 300));
       }
       
       // Show the terminal interface after boot sequence
@@ -192,55 +85,4 @@
 
     // Start the boot sequence when page loads
     document.addEventListener('DOMContentLoaded', runBootSequence);
-
-    function toggleFolder(folderName) {
-      const contentsDiv = document.getElementById(`${folderName}-contents`);
-      const icon = contentsDiv.previousElementSibling.querySelector('.expand-icon');
-      
-      if (contentsDiv.classList.contains('hidden')) {
-        contentsDiv.classList.remove('hidden');
-        icon.textContent = '-';
-        document.getElementById('output').innerHTML = `<div>Opening ${folderName}/...</div>`;
-      } else {
-        contentsDiv.classList.add('hidden');
-        icon.textContent = '+';
-      }
-    }
-
-    function navigate(path) {
-      const output = document.getElementById('output');
-      output.innerHTML = `<div>Navigating to ${path === 'N/A' ? 'unavailable project' : path}...</div>`;
-      
-      if (path !== 'N/A') {
-        setTimeout(() => {
-          window.open(path, '_blank');
-        }, 300);
-      }
-    }
-
-    function handleCommand(e) {
-      if (e.key === 'Enter') {
-        const cmd = e.target.value.trim();
-        const output = document.getElementById('output');
-
-        if (cmd === 'bope secret') {
-          output.innerHTML = `<div>i love evie</div>`;
-        } else if (cmd === 'ls') {
-          output.innerHTML = `<div>projects/</div>`;
-        } else if (cmd === 'clear') {
-          output.innerHTML = '';
-        } else if (cmd === 'help') {
-          output.innerHTML = `<div>Available commands:
-ls - List directory contents
-clear - Clear terminal
-"secret code" - Easter egg</div>`;
-        } else {
-          output.innerHTML = `<div>command not found: ${cmd}</div>`;
-        }
-
-        e.target.value = '';
-      }
-    }
-  </script>
-</body>
-</html>
+</script>
