@@ -87,6 +87,10 @@
       cursor: pointer;
       font-size: 0.8em;
     }
+    #adminPanel input[type="text"] {
+      width: 200px;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
@@ -110,19 +114,19 @@
   <div id="currentUserDisplay" style="font-size: 0.8em; color: #888;"></div>
   </div>
 
-  
- 
-
   <div id="adminPanel" style="display:none;">
     <h3>🛠 Admin Panel</h3>
-    <button onclick="banUser('exampleUser')">Ban User</button>
+    <div>
+      <input type="text" id="userToBanInput" placeholder="Username to ban" />
+      <button onclick="banUser()">Ban User</button>
+    </div>
     <button onclick="showBannedUsers()">Show Banned Users</button>
     <button onclick="deleteAllMessages()">Delete All Messages</button>
+  </div>
 
 </div>
 
-
-<script src="chat-app.js"></script> <!-- Linking the JS file -->
+<script src="chat-app.js"></script>
 
 </body>
 </html>
