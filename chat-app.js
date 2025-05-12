@@ -25,10 +25,10 @@ const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
 const currentUserDisplay = document.getElementById('currentUserDisplay');
 
-ffirebase.auth().onAuthStateChanged(user => {
+firebase.auth().onAuthStateChanged(user => {
   if (user) {
     uid = user.uid;
-    username = user.email || "Guest";
+    username = user.email || "Anonymous";
     currentUserDisplay.textContent = `Logged in as: ${username}`;
     usernameSection.style.display = 'none';
 
@@ -37,20 +37,20 @@ ffirebase.auth().onAuthStateChanged(user => {
       adminPanel.style.display = 'block';
     }
   } else {
-    firebase.auth().signInAnonymously();
+    // Show login form if needed
   }
 });
 
-
-window.adminLogin = function() {
+function adminLogin() {
   const email = document.getElementById('adminEmail').value;
   const password = document.getElementById('adminPassword').value;
   firebase.auth().signInWithEmailAndPassword(email, password)
     .catch(error => alert("Login failed: " + error.message));
-};
+}
 
 // Escape function to prevent XSS
 function escapeHTML(str) {
+  if (!str) return '';
   return str.replace(/[&<>"']/g, tag => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[tag]));
@@ -65,11 +65,13 @@ const debounce = (func, delay) => {
 };
 
 const sendTyping = debounce(() => {
-  db.ref('typing/' + uid).set(false);
+  db.ref('typing/' + uid).set(false)
+    .catch(error => console.error("Error updating typing status:", error));
 }, 2000);
 
 messageInput.addEventListener('input', () => {
-  db.ref('typing/' + uid).set(true);
+  db.ref('typing/' + uid).set(true)
+    .catch(error => console.error("Error setting typing status:", error));
   sendTyping();
 });
 
@@ -97,52 +99,87 @@ function sendMessage() {
       text: escapeHTML(text),
       timestamp: now
     };
-    db.ref('messages').push(msg);
+    db.ref('messages').push(msg)
+      .catch(error => console.error("Error sending message:", error));
     messageInput.value = '';
     lastMessageTime = now;
-  });
+  }).catch(error => console.error("Error checking banned users:", error));
 }
 
-function appendMessage(msg, scroll = true) {
-  if (!msg) return;
+function createMessageElement(msg) {
+  if (!msg) return null;
   const time = new Date(msg.timestamp).toLocaleTimeString();
   const div = document.createElement('div');
   div.className = 'message';
-  div.innerHTML = `
-    <span class="username">${escapeHTML(msg.user)}:</span> ${escapeHTML(msg.text)}
-    <span style="color:#00ffcc66;font-size:0.8em;"> [${time}]</span>
-    ${isAdmin ? `<button class="delete-btn" onclick="deleteMessage('${msg.key}')">×</button>` : ''}
-    <button class="pin-btn" onclick="pinMessage('${msg.key}')">📌</button>
-  `;
-  messageFragment.appendChild(div);
-  if (scroll) chatMessages.scrollTop = chatMessages.scrollHeight;
+  div.dataset.key = msg.key;
+  
+  const usernameSpan = document.createElement('span');
+  usernameSpan.className = 'username';
+  usernameSpan.textContent = escapeHTML(msg.user) + ':';
+  
+  const textSpan = document.createElement('span');
+  textSpan.textContent = ' ' + escapeHTML(msg.text);
+  
+  const timeSpan = document.createElement('span');
+  timeSpan.style.color = '#00ffcc66';
+  timeSpan.style.fontSize = '0.8em';
+  timeSpan.textContent = ` [${time}]`;
+  
+  div.appendChild(usernameSpan);
+  div.appendChild(textSpan);
+  div.appendChild(timeSpan);
+  
+  if (isAdmin) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '×';
+    deleteBtn.onclick = () => deleteMessage(msg.key);
+    div.appendChild(deleteBtn);
+  }
+  
+  const pinBtn = document.createElement('button');
+  pinBtn.className = 'pin-btn';
+  pinBtn.textContent = '📌';
+  pinBtn.onclick = () => pinMessage(msg.key);
+  div.appendChild(pinBtn);
+  
+  return div;
 }
-
-const messageFragment = document.createDocumentFragment();
 
 db.ref('messages').on('child_added', snapshot => {
   const msg = snapshot.val();
   msg.key = snapshot.key;
-  appendMessage(msg, true);
-  chatMessages.appendChild(messageFragment);
+  const messageElement = createMessageElement(msg);
+  if (messageElement) {
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
 });
 
 function deleteMessage(messageId) {
   if (!isAdmin) return;
-  db.ref('messages/' + messageId).remove();
+  db.ref('messages/' + messageId).remove()
+    .catch(error => console.error("Error deleting message:", error));
 }
 
 function pinMessage(messageId) {
-  db.ref('pinned/' + messageId).set(true);
+  db.ref('pinned/' + messageId).set(true)
+    .catch(error => console.error("Error pinning message:", error));
 }
 
 db.ref('pinned').on('value', snapshot => {
   const pinned = snapshot.val() || {};
   document.querySelectorAll('.message').forEach(msg => {
-    if (pinned[msg.dataset.key]) msg.style.backgroundColor = '#003333';
+    if (pinned[msg.dataset.key]) {
+      msg.style.backgroundColor = '#003333';
+    } else {
+      msg.style.backgroundColor = '';
+    }
   });
-}
+});
 
-window.signOut = function() {
-  firebase.auth().signOut().then(() => location.reload());
+function signOut() {
+  firebase.auth().signOut()
+    .then(() => location.reload())
+    .catch(error => console.error("Error signing out:", error));
 }
