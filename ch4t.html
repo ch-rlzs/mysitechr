@@ -38,7 +38,7 @@
     .username {
       color: #00ffaa;
     }
-    input[type="text"], input[type="email"], input[type="password"] {
+    input[type="text"], input[type="password"] {
       width: calc(100% - 20px);
       padding: 10px;
       font-family: 'Fira Code', monospace;
@@ -57,7 +57,7 @@
       border-radius: 4px;
       cursor: pointer;
     }
-    .delete-btn, .pin-btn {
+    .delete-btn, .pin-btn, .ban-btn {
       margin-left: 10px;
       background: transparent;
       color: #ff4444;
@@ -65,12 +65,13 @@
       cursor: pointer;
       font-size: 0.9em;
     }
-    #loginForm {
-      transition: all 0.3s ease;
+    .admin-btn {
+      background: #ff3333;
+      color: white;
     }
     @media (max-width: 600px) {
       .chat-box { padding: 10px; }
-      input[type="text"], input[type="email"], input[type="password"] { 
+      input[type="text"], input[type="password"] { 
         font-size: 14px;
         padding: 8px;
       }
@@ -80,31 +81,31 @@
 <body>
 
 <div class="chat-box">
-  <!-- Admin login form (hidden by default) -->
-  <div id="loginForm" style="display: none;">
-    <h3>Admin Login</h3>
-    <input type="email" id="adminEmail" placeholder="Admin Email" oninput="checkAdminInput()" />
-    <input type="password" id="adminPassword" placeholder="Password" />
-    <button onclick="adminLogin()">Login</button>
+  <div id="loginSection">
+    <input type="text" id="usernameInput" placeholder="Enter your username" />
+    <button onclick="setUsername()">Join Chat</button>
   </div>
 
-  <div id="usernameSection" style="display: block;">
-    <!-- Regular user content can go here if needed -->
+  <div id="adminLogin" style="display:none; margin-top:10px;">
+    <input type="password" id="adminPasswordInput" placeholder="Admin Password" />
+    <button onclick="adminAuth()">Authenticate</button>
   </div>
 
   <div class="messages" id="chatMessages"></div>
   <div id="typingIndicator" style="margin-bottom:10px; color: #00ffaa;"></div>
 
-  <input type="text" id="messageInput" placeholder="Type your message..." onkeydown="if(event.key === 'Enter') sendMessage()" />
+  <input type="text" id="messageInput" placeholder="Type your message..." 
+         onkeydown="if(event.key === 'Enter') sendMessage()" disabled />
   <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-    <button onclick="sendMessage()">Send</button>
-    <button onclick="signOut()">Sign Out</button>
+    <button onclick="sendMessage()" disabled id="sendBtn">Send</button>
     <div id="currentUserDisplay" style="font-size: 0.8em; color: #888;"></div>
   </div>
 
   <div id="adminPanel" style="display:none; margin-top:20px;">
     <h3>🛠 Admin Panel</h3>
-    <!-- Admin features can be added here -->
+    <button onclick="deleteAllMessages()" class="admin-btn">Delete All Messages</button>
+    <input type="text" id="banUsernameInput" placeholder="Username to ban" />
+    <button onclick="banUser()" class="admin-btn">Ban User</button>
   </div>
 </div>
 
