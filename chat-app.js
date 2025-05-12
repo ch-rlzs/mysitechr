@@ -10,94 +10,56 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Global variables
 let username = '';
-let uid = '';
 let isAdmin = false;
 let lastMessageTime = 0;
+const ADMIN_USERNAME = 'chrlzs';
+const ADMIN_PASSWORD = 'your_secure_password_here'; // Set your admin password
 
-// DOM elements
-let chatMessages, usernameSection, messageInput, typingIndicator, adminPanel, currentUserDisplay;
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Get DOM elements
-  chatMessages = document.getElementById('chatMessages');
-  usernameSection = document.getElementById('usernameSection');
-  messageInput = document.getElementById('messageInput');
-  typingIndicator = document.getElementById('typingIndicator');
-  adminPanel = document.getElementById('adminPanel');
-  currentUserDisplay = document.getElementById('currentUserDisplay');
-
-  // Initialize auth state listener
-  initAuth();
-});
-
-function initAuth() {
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      // User is signed in
-      uid = user.uid;
-      username = user.email || "Anonymous";
-      
-      if (currentUserDisplay) {
-        currentUserDisplay.textContent = `Logged in as: ${username}`;
-      }
-      
-      if (usernameSection) {
-        usernameSection.style.display = 'none';
-      }
-
-      // Check if admin
-      if (user.email === 'admin@chrlzs.com') {
-        isAdmin = true;
-        if (adminPanel) adminPanel.style.display = 'block';
-      }
-    } else {
-      // No user signed in
-      if (usernameSection) usernameSection.style.display = 'block';
-      if (currentUserDisplay) currentUserDisplay.textContent = '';
-      if (adminPanel) adminPanel.style.display = 'none';
-    }
-  });
-}
-
-function checkAdminInput() {
-  const emailInput = document.getElementById('adminEmail');
-  const loginForm = document.getElementById('loginForm');
+function setUsername() {
+  const usernameInput = document.getElementById('usernameInput');
+  username = usernameInput.value.trim();
   
-  if (emailInput && loginForm) {
-    if (emailInput.value.toLowerCase().includes('admin')) {
-      loginForm.style.display = 'block';
-    } else {
-      loginForm.style.display = 'none';
-    }
-  }
-}
-
-function adminLogin() {
-  const email = document.getElementById('adminEmail')?.value;
-  const password = document.getElementById('adminPassword')?.value;
-  
-  if (!email || !password) {
-    alert("Please enter both email and password");
+  if (!username) {
+    alert("Please enter a username");
     return;
   }
-
-  firebase.auth().signInWithEmailAndPassword(email, password)
-    .then(() => {
-      const loginForm = document.getElementById('loginForm');
-      if (loginForm) loginForm.style.display = 'none';
-    })
-    .catch(error => {
-      alert("Login failed: " + error.message);
-    });
+  
+  if (username === ADMIN_USERNAME) {
+    document.getElementById('adminLogin').style.display = 'block';
+    return;
+  }
+  
+  completeLogin();
 }
 
-// Escape HTML to prevent XSS
+function adminAuth() {
+  const passwordInput = document.getElementById('adminPasswordInput');
+  if (passwordInput.value === ADMIN_PASSWORD) {
+    isAdmin = true;
+    completeLogin();
+  } else {
+    alert("Incorrect admin password");
+  }
+}
+
+function completeLogin() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('adminLogin').style.display = 'none';
+  document.getElementById('messageInput').disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  
+  const currentUserDisplay = document.getElementById('currentUserDisplay');
+  currentUserDisplay.textContent = `Logged in as: ${username}`;
+  
+  if (isAdmin) {
+    document.getElementById('adminPanel').style.display = 'block';
+  }
+}
+
 function escapeHTML(str) {
   if (!str) return '';
   return str.replace(/[&<>"']/g, tag => ({
@@ -105,48 +67,11 @@ function escapeHTML(str) {
   }[tag]));
 }
 
-// Debounce typing indicator
-const debounce = (func, delay) => {
-  let timer;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => func.apply(this, args), delay);
-  };
-};
-
-const sendTyping = debounce(() => {
-  if (uid) {
-    db.ref('typing/' + uid).set(false)
-      .catch(error => console.error("Error updating typing status:", error));
-  }
-}, 2000);
-
-if (messageInput) {
-  messageInput.addEventListener('input', () => {
-    if (uid) {
-      db.ref('typing/' + uid).set(true)
-        .catch(error => console.error("Error setting typing status:", error));
-      sendTyping();
-    }
-  });
-}
-
-// Typing indicator listener
-db.ref('typing').on('value', snapshot => {
-  if (typingIndicator) {
-    const typingUsers = snapshot.val() || {};
-    const active = Object.keys(typingUsers).filter(u => typingUsers[u] && u !== uid);
-    typingIndicator.textContent = active.length ? `${active.join(', ')} are typing...` : '';
-  }
-});
-
 function sendMessage() {
-  if (!messageInput || !username) return;
-  
-  const text = messageInput.value.trim();
+  const text = document.getElementById('messageInput').value.trim();
   const now = Date.now();
   
-  if (!text || now - lastMessageTime < 1000) return;
+  if (!text || !username || now - lastMessageTime < 1000) return;
 
   db.ref('bannedUsers').once('value').then(snapshot => {
     const banned = snapshot.val() || {};
@@ -157,23 +82,17 @@ function sendMessage() {
 
     const msg = {
       user: username,
-      uid: uid,
       text: escapeHTML(text),
       timestamp: now
     };
     
-    db.ref('messages').push(msg)
-      .then(() => {
-        messageInput.value = '';
-        lastMessageTime = now;
-      })
-      .catch(error => console.error("Error sending message:", error));
-  }).catch(error => console.error("Error checking banned users:", error));
+    db.ref('messages').push(msg);
+    document.getElementById('messageInput').value = '';
+    lastMessageTime = now;
+  });
 }
 
 function createMessageElement(msg) {
-  if (!msg || !chatMessages) return null;
-  
   const div = document.createElement('div');
   div.className = 'message';
   div.dataset.key = msg.key;
@@ -183,54 +102,74 @@ function createMessageElement(msg) {
   div.innerHTML = `
     <span class="username">${escapeHTML(msg.user)}:</span> ${escapeHTML(msg.text)}
     <span style="color:#00ffcc66;font-size:0.8em;"> [${time}]</span>
-    ${isAdmin ? `<button class="delete-btn" onclick="deleteMessage('${msg.key}')">×</button>` : ''}
-    <button class="pin-btn" onclick="pinMessage('${msg.key}')">📌</button>
+    ${isAdmin ? `
+      <button class="delete-btn" onclick="deleteMessage('${msg.key}')">×</button>
+      <button class="ban-btn" onclick="banUserFromMessage('${escapeHTML(msg.user)}')">Ban</button>
+    ` : ''}
   `;
   
   return div;
 }
 
-// Message listener
 db.ref('messages').on('child_added', snapshot => {
   const msg = snapshot.val();
   msg.key = snapshot.key;
-  
   const messageElement = createMessageElement(msg);
-  if (messageElement && chatMessages) {
-    chatMessages.appendChild(messageElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
+  document.getElementById('chatMessages').appendChild(messageElement);
+  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
 });
 
 function deleteMessage(messageId) {
   if (!isAdmin) return;
-  db.ref('messages/' + messageId).remove()
-    .catch(error => console.error("Error deleting message:", error));
+  db.ref('messages/' + messageId).remove();
 }
 
-function pinMessage(messageId) {
-  db.ref('pinned/' + messageId).set(true)
-    .catch(error => console.error("Error pinning message:", error));
+function deleteAllMessages() {
+  if (!isAdmin) return;
+  if (confirm("Are you sure you want to delete ALL messages?")) {
+    db.ref('messages').remove();
+  }
 }
 
-// Pinned messages listener
-db.ref('pinned').on('value', snapshot => {
-  const pinned = snapshot.val() || {};
-  const messages = document.querySelectorAll('.message');
-  
-  messages.forEach(msg => {
-    if (msg?.dataset?.key) {
-      msg.style.backgroundColor = pinned[msg.dataset.key] ? '#003333' : '';
-    }
-  });
+function banUser() {
+  if (!isAdmin) return;
+  const usernameToBan = document.getElementById('banUsernameInput').value.trim();
+  if (usernameToBan) {
+    db.ref('bannedUsers/' + usernameToBan).set(true);
+    document.getElementById('banUsernameInput').value = '';
+    alert(`${usernameToBan} has been banned`);
+  }
+}
+
+function banUserFromMessage(username) {
+  if (!isAdmin) return;
+  if (username && confirm(`Ban ${username}?`)) {
+    db.ref('bannedUsers/' + username).set(true);
+    alert(`${username} has been banned`);
+  }
+}
+
+// Typing indicator functionality
+const debounce = (func, delay) => {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func.apply(this, args), delay);
+  };
+};
+
+const sendTyping = debounce(() => {
+  db.ref('typing/' + username).set(false);
+}, 2000);
+
+document.getElementById('messageInput').addEventListener('input', () => {
+  db.ref('typing/' + username).set(true);
+  sendTyping();
 });
 
-function signOut() {
-  firebase.auth().signOut()
-    .then(() => {
-      window.location.reload();
-    })
-    .catch(error => {
-      console.error("Error signing out:", error);
-    });
-}
+db.ref('typing').on('value', snapshot => {
+  const typingUsers = snapshot.val() || {};
+  const active = Object.keys(typingUsers).filter(u => typingUsers[u] && u !== username);
+  document.getElementById('typingIndicator').textContent = 
+    active.length ? `${active.join(', ')} are typing...` : '';
+});
