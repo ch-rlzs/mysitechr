@@ -168,15 +168,19 @@ function pinMessage(messageId) {
 }
 
 db.ref('pinned').on('value', snapshot => {
-  const pinned = snapshot.val() || {};
-  document.querySelectorAll('.message').forEach(msg => {
-    if (pinned[msg.dataset.key]) {
-      msg.style.backgroundColor = '#003333';
-    } else {
-      msg.style.backgroundColor = '';
-    }
-  });
-});  // Added missing parenthesis
+  try {
+    const pinned = snapshot.val() || {};
+    document.querySelectorAll('.message').forEach(msg => {
+      if (msg.dataset.key && pinned[msg.dataset.key]) {
+        msg.style.backgroundColor = '#003333';
+      } else {
+        msg.style.backgroundColor = '';
+      }
+    });
+  } catch (error) {
+    console.error("Error processing pinned messages:", error);
+  }
+});
 
 function signOut() {
   firebase.auth().signOut()
