@@ -3,141 +3,226 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>chrlzs@dedsec:/root</title>
+  <title>CHIZOS Bootloader</title>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
   <style>
-    /* Your existing CSS styles here */
     body {
       background-color: #0a0a0a;
       color: #00ffcc;
       font-family: 'Fira Code', monospace;
       margin: 0;
-      padding: 40px;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
     }
-    /* ... (keep all your existing styles) ... */
-    .typing-cursor {
-      display: inline-block;
-      width: 10px;
-      height: 15px;
-      background-color: #00ffcc;
-      animation: blink 1s infinite;
-      margin-left: 3px;
+
+    .terminal {
+      width: 90%;
+      max-width: 900px;
+      background-color: #0f0f0f;
+      border: 1px solid #00ffcc44;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 15px #00ffcc22;
     }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
+
+    /* ... (keep your existing styles) ... */
+
+    /* New animation styles */
+    @keyframes glitch {
+      0% { text-shadow: 0 0 5px #00ffcc; }
+      25% { text-shadow: -2px 0 5px #ff00a0, 2px 0 5px #00aaff; }
+      50% { text-shadow: 0 0 5px #00ffcc; }
+      75% { text-shadow: -3px 0 5px #ff00a0, 3px 0 5px #00aaff; }
+      100% { text-shadow: 0 0 5px #00ffcc; }
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      50% { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    .os-banner {
+      font-size: 2.5em;
+      text-align: center;
+      margin: 20px 0;
+      animation: glitch 2s infinite, pulse 3s infinite;
+      color: #00ffcc;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+
+    .login-prompt {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 1.2em;
+      color: #00ffaa;
     }
   </style>
 </head>
 <body>
 
-  <div class="terminal">
-    <div id="boot-sequence"></div>
-    
-    <div class="directory-view" id="directory-view" style="display: none;">
-      <!-- Your existing directory view content -->
-    </div>
-
-    <div class="output" id="output"></div>
-
-    <div class="command-line" id="command-line" style="display: none;">
-      <span>@chizled:/root$&nbsp;</span>
-      <input type="text" id="inputPrompt" autocomplete="off" onkeydown="handleCommand(event)">
-    </div>
+<div class="terminal">
+  <div id="boot-sequence"></div>
+  
+  <div class="directory-view" id="directory-view" style="display: none;">
+    <!-- Your existing directory view content -->
   </div>
 
-  <script>
-    // Wait for full DOM load before running
-    document.addEventListener('DOMContentLoaded', function() {
-      // Get elements after DOM is ready
-      const bootSequence = document.getElementById('boot-sequence');
-      const directoryView = document.getElementById('directory-view');
-      const commandLine = document.getElementById('command-line');
-      const inputPrompt = document.getElementById('inputPrompt');
+  <div class="output" id="output"></div>
 
-      // Human-like typing animation
-      const bootMessages = [
-        "Initializing system...",
-        "Checking security protocols...",
-        "Establishing secure connection...",
-        "Loading directory structure...",
-        "System ready."
-      ];
+  <div class="command-line" id="command-line" style="display: none;">
+    <span>@chizled:/root$&nbsp;</span>
+    <input type="text" id="inputPrompt" autocomplete="off" onkeydown="handleCommand(event)">
+  </div>
+</div>
 
-      async function humanType(text, element) {
-        return new Promise(async (resolve) => {
-          let currentText = element.innerHTML.replace(/<span class="typing-cursor"><\/span>/g, '');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const bootSequence = document.getElementById('boot-sequence');
+  const directoryView = document.getElementById('directory-view');
+  const commandLine = document.getElementById('command-line');
+  const inputPrompt = document.getElementById('inputPrompt');
+
+  // Faster boot sequence with realistic commands
+  const bootMessages = [
+    "[OK] Mounting filesystems",
+    "[OK] Loading kernel modules",
+    "[OK] Starting network services",
+    "[OK] Initializing crypto engine",
+    "[OK] Checking system integrity",
+    "[OK] Starting secure shell",
+    "[OK] Loading user profile",
+    "Welcome to CHIZOS v2.5.1 (terminal)"
+  ];
+
+  // Our custom OS name - CHIZOS (CHrlzs + chIZled + OS)
+  const osBanner = `
+   ▄████▄   ██░ ██  ██▓███   ██▓ ██▓    
+  ▒██▀ ▀█  ▓██░ ██▒▓██░  ██▒▓██▒▓██▒    
+  ▒▓█    ▄ ▒██▀▀██░▓██░ ██▓▒▒██▒▒██░    
+  ▒▓▓▄ ▄██▒░▓█ ░██ ▒██▄█▓▒ ▒░██░▒██░    
+  ▒ ▓███▀ ░░▓█▒░██▓▒██▒ ░  ░░██░░██████▒
+  ░ ░▒ ▒  ░ ▒ ░░▒░▒▒▓▒░ ░  ░░▓  ░ ▒░▓  ░
+    ░  ▒    ▒ ░▒░ ░░▒ ░      ▒ ░░ ░ ▒  ░
+  ░         ░  ░░ ░░░        ▒ ░  ░ ░   
+  ░ ░       ░  ░  ░          ░      ░  ░
+  ░                                     
+  `;
+
+  async function fastType(text, element, minSpeed = 20, maxSpeed = 60) {
+    return new Promise(resolve => {
+      let currentText = '';
+      let i = 0;
+      
+      const typeNextChar = () => {
+        if (i < text.length) {
+          currentText += text[i];
           element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
+          i++;
           
-          const baseSpeed = 80 + Math.random() * 70;
-          let willMakeMistake = text.length > 8 && Math.random() < 0.2;
-          let mistakeIndex = willMakeMistake ? Math.floor(text.length * 0.7) : -1;
-          let mistakeCorrected = false;
-          
-          for (let i = 0; i < text.length; i++) {
-            const charSpeed = baseSpeed * (0.8 + Math.random() * 0.4);
-            const pauseMultiplier = ['.', ',', ' ', ':'].includes(text[i]) ? 2.5 : 1;
-            
-            await new Promise(r => setTimeout(r, charSpeed * pauseMultiplier));
-            
-            if (willMakeMistake && i >= mistakeIndex && !mistakeCorrected) {
-              const wrongChar = String.fromCharCode(text.charCodeAt(i) + 1);
-              currentText += wrongChar;
-              element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
-              
-              await new Promise(r => setTimeout(r, baseSpeed * 3));
-              
-              currentText = currentText.slice(0, -1);
-              element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
-              await new Promise(r => setTimeout(r, baseSpeed * 0.7));
-              
-              mistakeCorrected = true;
-            }
-            
-            currentText += text[i];
-            element.innerHTML = currentText + `<span class="typing-cursor"></span>`;
-          }
-          
-          const endPause = text.endsWith('...') ? 500 : 200;
-          await new Promise(r => setTimeout(r, endPause));
-          
+          // Random speed variation for more natural feel
+          const speed = minSpeed + Math.random() * (maxSpeed - minSpeed);
+          setTimeout(typeNextChar, speed);
+        } else {
           element.innerHTML = currentText + `<br>`;
           resolve();
-        });
-      }
-
-      async function runBootSequence() {
-        if (!bootSequence) return;
-        
-        bootSequence.innerHTML = `<span class="typing-cursor"></span>`;
-        
-        for (const message of bootMessages) {
-          await humanType(message, bootSequence);
-          await new Promise(r => setTimeout(r, 100 + Math.random() * 300));
         }
-        
-        if (directoryView) directoryView.style.display = 'block';
-        if (commandLine) commandLine.style.display = 'flex';
-        if (inputPrompt) inputPrompt.focus();
-      }
-
-      // Start the sequence
-      runBootSequence();
+      };
+      
+      typeNextChar();
     });
+  }
 
-    // Keep your existing functions (toggleFolder, navigate, handleCommand)
-    // outside the DOMContentLoaded event since they're called after page loads
-    function toggleFolder(folderName) {
-      /* existing function */
+  async function runBootSequence() {
+    if (!bootSequence) return;
+    
+    // Initial blank screen with cursor
+    bootSequence.innerHTML = `<span class="typing-cursor"></span>`;
+    await new Promise(r => setTimeout(r, 300));
+    
+    // Fast typing of boot messages
+    for (const message of bootMessages) {
+      await fastType(message, bootSequence);
+      await new Promise(r => setTimeout(r, 50)); // Very short pause between lines
     }
     
-    function navigate(path) {
-      /* existing function */
-    }
+    // Clear screen
+    bootSequence.innerHTML = '';
+    await new Promise(r => setTimeout(r, 200));
     
-    function handleCommand(e) {
-      /* existing function */
+    // Show OS banner with animation
+    bootSequence.innerHTML = `<div class="os-banner">${osBanner}</div>`;
+    
+    // Add login prompt
+    await new Promise(r => setTimeout(r, 800));
+    bootSequence.innerHTML += `<div class="login-prompt">CHIZOS ready - auto-login as root</div>`;
+    await new Promise(r => setTimeout(r, 500));
+    
+    // Transition to terminal
+    bootSequence.style.display = 'none';
+    if (directoryView) directoryView.style.display = 'block';
+    if (commandLine) commandLine.style.display = 'flex';
+    if (inputPrompt) inputPrompt.focus();
+  }
+
+  // Start the sequence
+  runBootSequence();
+});
+
+// Keep your existing functions
+function toggleFolder(folderName) {
+  const contentsDiv = document.getElementById(`${folderName}-contents`);
+  const icon = contentsDiv.previousElementSibling.querySelector('.expand-icon');
+  
+  if (contentsDiv.classList.contains('hidden')) {
+    contentsDiv.classList.remove('hidden');
+    icon.textContent = '-';
+    document.getElementById('output').innerHTML = `<div>Opening ${folderName}/...</div>`;
+  } else {
+    contentsDiv.classList.add('hidden');
+    icon.textContent = '+';
+  }
+}
+
+function navigate(path) {
+  const output = document.getElementById('output');
+  output.innerHTML = `<div>Navigating to ${path === 'N/A' ? 'unavailable project' : path}...</div>`;
+  
+  if (path !== 'N/A') {
+    setTimeout(() => {
+      window.open(path, '_blank');
+    }, 300);
+  }
+}
+
+function handleCommand(e) {
+  if (e.key === 'Enter') {
+    const cmd = e.target.value.trim();
+    const output = document.getElementById('output');
+
+    if (cmd === 'bope secret') {
+      output.innerHTML = `<div>i love evie</div>`;
+    } else if (cmd === 'ls') {
+      output.innerHTML = `<div>projects/</div>`;
+    } else if (cmd === 'clear') {
+      output.innerHTML = '';
+    } else if (cmd === 'help') {
+      output.innerHTML = `<div>Available commands:
+ls - List directory contents
+clear - Clear terminal
+"secret code" - Easter egg</div>`;
+    } else {
+      output.innerHTML = `<div>command not found: ${cmd}</div>`;
     }
-  </script>
+
+    e.target.value = '';
+  }
+}
+</script>
 </body>
 </html>
