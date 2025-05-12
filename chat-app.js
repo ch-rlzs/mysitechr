@@ -13,11 +13,41 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Constants
+const ADMIN_USERNAME = 'chrlzs';
+const ADMIN_PASSWORD = 'P4ssedHumidPerpendicular27';
+
+// State variables
 let username = '';
 let isAdmin = false;
 let lastMessageTime = 0;
-const ADMIN_USERNAME = 'chrlzs';
-const ADMIN_PASSWORD = 'your_secure_password_here'; // Set your admin password
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', () => {
+  checkSavedLogin();
+  setupEventListeners();
+});
+
+function checkSavedLogin() {
+  const savedUsername = localStorage.getItem('chatUsername');
+  const savedAdmin = localStorage.getItem('chatIsAdmin') === 'true';
+  
+  if (savedUsername) {
+    username = savedUsername;
+    isAdmin = savedAdmin;
+    completeLogin();
+    
+    if (isAdmin) {
+      document.getElementById('adminPasswordInput').value = '';
+    }
+  }
+}
+
+function setupEventListeners() {
+  document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
+}
 
 function setUsername() {
   const usernameInput = document.getElementById('usernameInput');
@@ -30,8 +60,13 @@ function setUsername() {
   
   if (username === ADMIN_USERNAME) {
     document.getElementById('adminLogin').style.display = 'block';
+    usernameInput.value = '';
     return;
   }
+  
+  // Save to local storage
+  localStorage.setItem('chatUsername', username);
+  localStorage.setItem('chatIsAdmin', 'false');
   
   completeLogin();
 }
@@ -40,25 +75,43 @@ function adminAuth() {
   const passwordInput = document.getElementById('adminPasswordInput');
   if (passwordInput.value === ADMIN_PASSWORD) {
     isAdmin = true;
+    localStorage.setItem('chatUsername', ADMIN_USERNAME);
+    localStorage.setItem('chatIsAdmin', 'true');
     completeLogin();
   } else {
     alert("Incorrect admin password");
+    passwordInput.value = '';
   }
 }
 
 function completeLogin() {
   document.getElementById('loginSection').style.display = 'none';
   document.getElementById('adminLogin').style.display = 'none';
-  document.getElementById('messageInput').disabled = false;
-  document.getElementById('sendBtn').disabled = false;
   
-  const currentUserDisplay = document.getElementById('currentUserDisplay');
-  currentUserDisplay.textContent = `Logged in as: ${username}`;
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  
+  messageInput.disabled = false;
+  sendBtn.disabled = false;
+  messageInput.focus();
+  
+  document.getElementById('currentUserDisplay').textContent = `Logged in as: ${username}`;
   
   if (isAdmin) {
     document.getElementById('adminPanel').style.display = 'block';
   }
 }
+
+function signOut() {
+  localStorage.removeItem('chatUsername');
+  localStorage.removeItem('chatIsAdmin');
+  window.location.reload();
+}
+
+// ... (keep all other existing functions exactly the same: escapeHTML, sendMessage, createMessageElement, etc) ...
+
+// Add this to your existing buttons in the HTML:
+// <button onclick="signOut()">Sign Out</button>
 
 function escapeHTML(str) {
   if (!str) return '';
