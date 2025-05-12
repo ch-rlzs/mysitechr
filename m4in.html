@@ -28,35 +28,23 @@
       padding: 20px;
       box-shadow: 0 0 15px #00ffcc22;
       height: 80vh;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Directory View Styles */
     .directory-view {
       line-height: 1.4;
       padding: 5px 0;
     }
 
-    .file {
+    .file, .folder {
       cursor: pointer;
-      color: #00ffcc;
       display: block;
       padding: 2px 0;
     }
-
-    .file:hover {
-      color: #ffffff;
-      text-decoration: underline;
-    }
-
-    .folder {
-      cursor: pointer;
-      color: #00aaff;
-      display: block;
-      padding: 2px 0;
-    }
-
-    .folder:hover {
+    .file { color: #00ffcc; }
+    .folder { color: #00aaff; }
+    .file:hover, .folder:hover {
       color: #ffffff;
       text-decoration: underline;
     }
@@ -67,12 +55,19 @@
       border-top: 1px dashed #00ffcc44;
       padding-top: 10px;
       min-height: 20px;
+      flex: 1;
+      overflow-y: auto;
     }
 
     .command-line {
       display: flex;
       align-items: center;
       margin-top: 15px;
+      position: sticky;
+      bottom: 0;
+      background: #0f0f0f;
+      padding: 10px 0;
+      border-top: 1px solid #00ffcc22;
     }
 
     #inputPrompt {
@@ -86,21 +81,10 @@
       padding: 5px;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
+    .expand-icon { color: #00ff77; font-weight: bold; margin-right: 5px; }
+    .indent { margin-left: 20px; }
 
-    .expand-icon {
-      color: #00ff77;
-      font-weight: bold;
-      margin-right: 5px;
-    }
-
-    .indent {
-      margin-left: 20px;
-    }
-
-    /* Typing Animation Styles */
     .typing-cursor {
       display: inline-block;
       width: 10px;
@@ -109,13 +93,8 @@
       animation: blink 1s infinite;
       margin-left: 3px;
     }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0; }
-    }
-
-    /* ASCII Art Styles */
     .ascii-art {
       white-space: pre;
       font-size: 12px;
@@ -125,28 +104,16 @@
       color: #00ffcc;
     }
 
-    .boot-message {
-      margin-bottom: 5px;
-    }
-
-    .os-banner {
-      text-align: center;
-      margin: 20px 0;
-      color: #00ffcc;
-    }
-
-    .login-prompt {
-      text-align: center;
-      margin-top: 10px;
-      color: #00ffaa;
-    }
+    .boot-message { margin-bottom: 5px; }
+    .os-banner { text-align: center; margin: 20px 0; color: #00ffcc; }
+    .login-prompt { text-align: center; margin-top: 10px; color: #00ffaa; }
+    .directory-path { color: #00ffaa; }
   </style>
 </head>
 <body>
-
 <div class="terminal">
   <div id="boot-sequence"></div>
-  
+
   <div class="directory-view" id="directory-view" style="display: none;">
     <div>/root</div>
     <div class="indent">
@@ -169,31 +136,23 @@
   <div class="output" id="output"></div>
 
   <div class="command-line" id="command-line" style="display: none;">
-    <span>@chizled:/root$&nbsp;</span>
+    <span><span id="timeDisplay"></span> @chizled:<span class="directory-path">/root</span>$&nbsp;</span>
     <input type="text" id="inputPrompt" autocomplete="off" onkeydown="handleCommand(event)">
   </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const bootSequence = document.getElementById('boot-sequence');
-  const directoryView = document.getElementById('directory-view');
-  const commandLine = document.getElementById('command-line');
-  const inputPrompt = document.getElementById('inputPrompt');
+const bootMessages = [
+  "[OK] Mounting filesystems",
+  "[OK] Loading kernel modules",
+  "[OK] Starting network services",
+  "[OK] Initializing crypto engine",
+  "[OK] Checking system integrity",
+  "[OK] Starting secure shell",
+  "[OK] Loading user profile"
+];
 
-  // Boot sequence commands (stacked vertically)
-  const bootMessages = [
-    "[OK] Mounting filesystems",
-    "[OK] Loading kernel modules",
-    "[OK] Starting network services",
-    "[OK] Initializing crypto engine",
-    "[OK] Checking system integrity",
-    "[OK] Starting secure shell",
-    "[OK] Loading user profile"
-  ];
-
-  // CHIZOS ASCII Art (same size as original)
-  const osBanner = `
+const osBanner = `
 <div class="ascii-art">
  ▄████▄   ██░ ██  ██▀███   ██▓    ▒███████▒  ██████ 
 ▒██▀ ▀█  ▓██░ ██▒▓██ ▒ ██▒▓██▒    ▒ ▒ ▒ ▄▀░▒██    ▒ 
@@ -206,74 +165,51 @@ document.addEventListener('DOMContentLoaded', function() {
 ░ ░       ░  ░  ░   ░         ░  ░  ░ ░          ░  
 ░                                 ░                 
 </div>
-<div class="os-banner">CHIZOS v2.5.1</div>
-`;
+<div class="os-banner">CHIZOS v2.5.1</div>`;
 
-  async function fastType(text, element) {
-    return new Promise(resolve => {
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'boot-message';
-      element.appendChild(messageDiv);
-      
-      let currentText = '';
-      let i = 0;
-      
-      const typeNextChar = () => {
-        if (i < text.length) {
-          currentText += text[i];
-          messageDiv.textContent = currentText;
-          i++;
-          setTimeout(typeNextChar, 10 + Math.random() * 30); // Fast typing with slight variation
-        } else {
-          resolve();
-        }
-      };
-      
-      typeNextChar();
-    });
+const bootSequence = document.getElementById('boot-sequence');
+const directoryView = document.getElementById('directory-view');
+const commandLine = document.getElementById('command-line');
+const inputPrompt = document.getElementById('inputPrompt');
+const output = document.getElementById('output');
+const timeDisplay = document.getElementById('timeDisplay');
+
+let commandHistory = [], commandIndex = -1;
+
+function fastType(text, element) {
+  return new Promise(resolve => {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'boot-message';
+    element.appendChild(messageDiv);
+    messageDiv.textContent = text;
+    resolve();
+  });
+}
+
+async function runBootSequence() {
+  bootSequence.innerHTML = '';
+  for (const message of bootMessages) {
+    await fastType(message, bootSequence);
+    await new Promise(r => setTimeout(r, 10));
   }
+  await new Promise(r => setTimeout(r, 100));
+  bootSequence.innerHTML += osBanner;
+  await new Promise(r => setTimeout(r, 200));
+  bootSequence.innerHTML += `<div class="login-prompt">CHIZOS ready - auto-login as root</div>`;
+  await new Promise(r => setTimeout(r, 300));
+  bootSequence.style.display = 'none';
+  directoryView.style.display = 'block';
+  commandLine.style.display = 'flex';
+  inputPrompt.focus();
+}
 
-  async function runBootSequence() {
-    if (!bootSequence) return;
-    
-    // Initial blank screen
-    bootSequence.innerHTML = '';
-    
-    // Fast typing of boot messages (stacked)
-    for (const message of bootMessages) {
-      await fastType(message, bootSequence);
-      await new Promise(r => setTimeout(r, 50)); // Short pause between lines
-    }
-    
-    // Add OS banner
-    await new Promise(r => setTimeout(r, 200));
-    bootSequence.innerHTML += osBanner;
-    
-    // Add login prompt
-    await new Promise(r => setTimeout(r, 500));
-    bootSequence.innerHTML += `<div class="login-prompt">CHIZOS ready - auto-login as root</div>`;
-    await new Promise(r => setTimeout(r, 500));
-    
-    // Transition to terminal
-    bootSequence.style.display = 'none';
-    if (directoryView) directoryView.style.display = 'block';
-    if (commandLine) commandLine.style.display = 'flex';
-    if (inputPrompt) inputPrompt.focus();
-  }
-
-  // Start the sequence
-  runBootSequence();
-});
-
-// Original interface functions
 function toggleFolder(folderName) {
   const contentsDiv = document.getElementById(`${folderName}-contents`);
   const icon = contentsDiv.previousElementSibling.querySelector('.expand-icon');
-  
   if (contentsDiv.classList.contains('hidden')) {
     contentsDiv.classList.remove('hidden');
     icon.textContent = '-';
-    document.getElementById('output').innerHTML = `<div>Opening ${folderName}/...</div>`;
+    output.innerHTML = `<div>Opening ${folderName}/...</div>`;
   } else {
     contentsDiv.classList.add('hidden');
     icon.textContent = '+';
@@ -281,20 +217,15 @@ function toggleFolder(folderName) {
 }
 
 function navigate(path) {
-  const output = document.getElementById('output');
-  output.innerHTML = `<div>Navigating to ${path === 'N/A' ? 'unavailable project' : path}...</div>`;
-  
-  if (path !== 'N/A') {
-    setTimeout(() => {
-      window.open(path, '_blank');
-    }, 300);
-  }
+  output.innerHTML = `<div>accessing ${path}... <span class="typing-cursor"></span></div>`;
+  if (path !== 'N/A') setTimeout(() => window.open(path, '_blank'), 300);
 }
 
 function handleCommand(e) {
   if (e.key === 'Enter') {
     const cmd = e.target.value.trim();
-    const output = document.getElementById('output');
+    if (cmd) commandHistory.push(cmd);
+    commandIndex = commandHistory.length;
 
     if (cmd === 'bope secret') {
       output.innerHTML = `<div>i love evie</div>`;
@@ -303,17 +234,33 @@ function handleCommand(e) {
     } else if (cmd === 'clear') {
       output.innerHTML = '';
     } else if (cmd === 'help') {
-      output.innerHTML = `<div>Available commands:
-ls - List directory contents
-clear - Clear terminal
-"secret code" - Easter egg</div>`;
+      output.innerHTML = `<div>Available commands:<br>ls - List directory contents<br>clear - Clear terminal<br>"secret code" - Easter egg</div>`;
     } else {
       output.innerHTML = `<div>command not found: ${cmd}</div>`;
     }
 
     e.target.value = '';
+  } else if (e.key === 'ArrowUp') {
+    if (commandIndex > 0) {
+      commandIndex--;
+      inputPrompt.value = commandHistory[commandIndex];
+    }
+  } else if (e.key === 'ArrowDown') {
+    if (commandIndex < commandHistory.length - 1) {
+      commandIndex++;
+      inputPrompt.value = commandHistory[commandIndex];
+    } else {
+      inputPrompt.value = '';
+    }
   }
 }
+
+setInterval(() => {
+  const now = new Date();
+  timeDisplay.textContent = now.toLocaleTimeString();
+}, 1000);
+
+runBootSequence();
 </script>
 </body>
 </html>
