@@ -25,10 +25,10 @@ const typingIndicator = document.getElementById('typingIndicator');
 const adminPanel = document.getElementById('adminPanel');
 const currentUserDisplay = document.getElementById('currentUserDisplay');
 
-firebase.auth().onAuthStateChanged(user => {
+ffirebase.auth().onAuthStateChanged(user => {
   if (user) {
     uid = user.uid;
-    username = user.email || "Anonymous";
+    username = user.email || "Guest";
     currentUserDisplay.textContent = `Logged in as: ${username}`;
     usernameSection.style.display = 'none';
 
@@ -37,16 +37,17 @@ firebase.auth().onAuthStateChanged(user => {
       adminPanel.style.display = 'block';
     }
   } else {
-    // Show login form if needed
+    firebase.auth().signInAnonymously();
   }
 });
 
-function adminLogin() {
+
+window.adminLogin = function() {
   const email = document.getElementById('adminEmail').value;
   const password = document.getElementById('adminPassword').value;
   firebase.auth().signInWithEmailAndPassword(email, password)
     .catch(error => alert("Login failed: " + error.message));
-}
+};
 
 // Escape function to prevent XSS
 function escapeHTML(str) {
@@ -142,6 +143,6 @@ db.ref('pinned').on('value', snapshot => {
   });
 }
 
-function signOut() {
+window.signOut = function() {
   firebase.auth().signOut().then(() => location.reload());
 }
