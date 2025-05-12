@@ -1,4 +1,4 @@
-// Firebase config
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
   authDomain: "chrlzs-chat-645cf.firebaseapp.com",
@@ -10,173 +10,173 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Constants
+// App State
 const ADMIN_USERNAME = 'chrlzs';
-const ADMIN_PASSWORD = 'P4ssedHumidPerpendicular27';
-
-// State variables
-let username = '';
+let currentUser = null;
 let isAdmin = false;
-let lastMessageTime = 0;
 
-// Initialize on DOM load
-document.addEventListener('DOMContentLoaded', () => {
-  checkSavedLogin();
+// DOM Elements
+const loginSection = document.getElementById('loginSection');
+const chatSection = document.getElementById('chatSection');
+const usernameInput = document.getElementById('usernameInput');
+const chatMessages = document.getElementById('chatMessages');
+const messageInput = document.getElementById('messageInput');
+const typingIndicator = document.getElementById('typingIndicator');
+const adminPanel = document.getElementById('adminPanel');
+const banInput = document.getElementById('banInput');
+
+// Initialize the app
+function init() {
+  loadUserFromStorage();
   setupEventListeners();
-});
-
-function checkSavedLogin() {
-  const savedUsername = localStorage.getItem('chatUsername');
-  const savedAdmin = localStorage.getItem('chatIsAdmin') === 'true';
   
-  if (savedUsername) {
-    username = savedUsername;
-    isAdmin = savedAdmin;
-    completeLogin();
-    
-    if (isAdmin) {
-      document.getElementById('adminPasswordInput').value = '';
-    }
+  if (currentUser) {
+    startChatSession();
   }
 }
 
+// Load user from localStorage
+function loadUserFromStorage() {
+  const savedUser = localStorage.getItem('chatUser');
+  if (savedUser) {
+    currentUser = savedUser;
+    isAdmin = currentUser === ADMIN_USERNAME;
+  }
+}
+
+// Save user to localStorage
+function saveUserToStorage() {
+  if (currentUser) {
+    localStorage.setItem('chatUser', currentUser);
+  }
+}
+
+// Clear user from storage
+function clearUserFromStorage() {
+  localStorage.removeItem('chatUser');
+}
+
+// Setup event listeners
 function setupEventListeners() {
-  document.getElementById('messageInput').addEventListener('keypress', (e) => {
+  messageInput?.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
+  });
+  
+  messageInput?.addEventListener('input', () => {
+    updateTypingIndicator(true);
+    debounceTypingIndicator();
   });
 }
 
-function setUsername() {
-  const usernameInput = document.getElementById('usernameInput');
-  username = usernameInput.value.trim();
+// Login function
+function login() {
+  const username = usernameInput.value.trim();
   
   if (!username) {
     alert("Please enter a username");
     return;
   }
   
-  if (username === ADMIN_USERNAME) {
-    document.getElementById('adminLogin').style.display = 'block';
-    usernameInput.value = '';
-    return;
-  }
-  
-  // Save to local storage
-  localStorage.setItem('chatUsername', username);
-  localStorage.setItem('chatIsAdmin', 'false');
-  
-  completeLogin();
+  currentUser = username;
+  isAdmin = currentUser === ADMIN_USERNAME;
+  saveUserToStorage();
+  startChatSession();
 }
 
-function adminAuth() {
-  const passwordInput = document.getElementById('adminPasswordInput');
-  if (passwordInput.value === ADMIN_PASSWORD) {
-    isAdmin = true;
-    localStorage.setItem('chatUsername', ADMIN_USERNAME);
-    localStorage.setItem('chatIsAdmin', 'true');
-    completeLogin();
-  } else {
-    alert("Incorrect admin password");
-    passwordInput.value = '';
-  }
-}
-
-function completeLogin() {
-  document.getElementById('loginSection').style.display = 'none';
-  document.getElementById('adminLogin').style.display = 'none';
-  
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-  
-  messageInput.disabled = false;
-  sendBtn.disabled = false;
-  messageInput.focus();
-  
-  document.getElementById('currentUserDisplay').textContent = `Logged in as: ${username}`;
+// Start chat session
+function startChatSession() {
+  loginSection.style.display = 'none';
+  chatSection.style.display = 'block';
   
   if (isAdmin) {
-    document.getElementById('adminPanel').style.display = 'block';
+    adminPanel.style.display = 'block';
   }
-}
-
-function signOut() {
-  localStorage.removeItem('chatUsername');
-  localStorage.removeItem('chatIsAdmin');
-  window.location.reload();
-}
-
-// ... (keep all other existing functions exactly the same: escapeHTML, sendMessage, createMessageElement, etc) ...
-
-// Add this to your existing buttons in the HTML:
-// <button onclick="signOut()">Sign Out</button>
-
-function escapeHTML(str) {
-  if (!str) return '';
-  return str.replace(/[&<>"']/g, tag => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[tag]));
-}
-
-function sendMessage() {
-  const text = document.getElementById('messageInput').value.trim();
-  const now = Date.now();
   
-  if (!text || !username || now - lastMessageTime < 1000) return;
+  messageInput.focus();
+  loadMessages();
+  setupTypingListener();
+}
 
+// Logout function
+function logout() {
+  updateTypingIndicator(false);
+  clearUserFromStorage();
+  currentUser = null;
+  isAdmin = false;
+  
+  chatSection.style.display = 'none';
+  loginSection.style.display = 'block';
+  usernameInput.value = '';
+  usernameInput.focus();
+}
+
+// Send message function
+function sendMessage() {
+  const messageText = messageInput.value.trim();
+  
+  if (!messageText || !currentUser) return;
+  
+  // Check if user is banned
   db.ref('bannedUsers').once('value').then(snapshot => {
-    const banned = snapshot.val() || {};
-    if (banned[username]) {
-      alert("You are banned from sending messages.");
+    const bannedUsers = snapshot.val() || {};
+    if (bannedUsers[currentUser]) {
+      alert("You are banned from sending messages");
       return;
     }
-
-    const msg = {
-      user: username,
-      text: escapeHTML(text),
-      timestamp: now
+    
+    const message = {
+      user: currentUser,
+      text: escapeHtml(messageText),
+      timestamp: Date.now()
     };
     
-    db.ref('messages').push(msg);
-    document.getElementById('messageInput').value = '';
-    lastMessageTime = now;
+    db.ref('messages').push(message);
+    messageInput.value = '';
   });
 }
 
-function createMessageElement(msg) {
-  const div = document.createElement('div');
-  div.className = 'message';
-  div.dataset.key = msg.key;
+// Load messages from Firebase
+function loadMessages() {
+  db.ref('messages').on('child_added', (snapshot) => {
+    const message = snapshot.val();
+    message.id = snapshot.key;
+    displayMessage(message);
+  });
+}
+
+// Display a message in the chat
+function displayMessage(message) {
+  const messageElement = document.createElement('div');
+  messageElement.className = 'message';
+  messageElement.dataset.id = message.id;
   
-  const time = new Date(msg.timestamp).toLocaleTimeString();
+  const timeString = new Date(message.timestamp).toLocaleTimeString();
   
-  div.innerHTML = `
-    <span class="username">${escapeHTML(msg.user)}:</span> ${escapeHTML(msg.text)}
-    <span style="color:#00ffcc66;font-size:0.8em;"> [${time}]</span>
+  messageElement.innerHTML = `
+    <span class="username">${escapeHtml(message.user)}</span>
+    <span class="timestamp">[${timeString}]</span>
+    <div>${message.text}</div>
     ${isAdmin ? `
-      <button class="delete-btn" onclick="deleteMessage('${msg.key}')">×</button>
-      <button class="ban-btn" onclick="banUserFromMessage('${escapeHTML(msg.user)}')">Ban</button>
+      <button onclick="deleteMessage('${message.id}')" class="btn-danger">Delete</button>
+      <button onclick="banUserFromMessage('${escapeHtml(message.user)}')" class="btn-danger">Ban</button>
     ` : ''}
   `;
   
-  return div;
+  chatMessages.appendChild(messageElement);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-db.ref('messages').on('child_added', snapshot => {
-  const msg = snapshot.val();
-  msg.key = snapshot.key;
-  const messageElement = createMessageElement(msg);
-  document.getElementById('chatMessages').appendChild(messageElement);
-  document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
-});
-
+// Delete a message
 function deleteMessage(messageId) {
   if (!isAdmin) return;
   db.ref('messages/' + messageId).remove();
 }
 
+// Delete all messages
 function deleteAllMessages() {
   if (!isAdmin) return;
   if (confirm("Are you sure you want to delete ALL messages?")) {
@@ -184,45 +184,72 @@ function deleteAllMessages() {
   }
 }
 
+// Ban a user
 function banUser() {
   if (!isAdmin) return;
-  const usernameToBan = document.getElementById('banUsernameInput').value.trim();
-  if (usernameToBan) {
-    db.ref('bannedUsers/' + usernameToBan).set(true);
-    document.getElementById('banUsernameInput').value = '';
-    alert(`${usernameToBan} has been banned`);
+  const username = banInput.value.trim();
+  if (username) {
+    db.ref('bannedUsers/' + username).set(true);
+    banInput.value = '';
+    alert(`${username} has been banned`);
   }
 }
 
+// Ban user from message
 function banUserFromMessage(username) {
   if (!isAdmin) return;
-  if (username && confirm(`Ban ${username}?`)) {
+  if (confirm(`Ban ${username}?`)) {
     db.ref('bannedUsers/' + username).set(true);
     alert(`${username} has been banned`);
   }
 }
 
-// Typing indicator functionality
-const debounce = (func, delay) => {
-  let timer;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => func.apply(this, args), delay);
-  };
-};
+// Typing indicator functions
+let typingTimeout;
+function updateTypingIndicator(isTyping) {
+  if (!currentUser) return;
+  db.ref('typing/' + currentUser).set(isTyping);
+}
 
-const sendTyping = debounce(() => {
-  db.ref('typing/' + username).set(false);
-}, 2000);
+function debounceTypingIndicator() {
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    updateTypingIndicator(false);
+  }, 2000);
+}
 
-document.getElementById('messageInput').addEventListener('input', () => {
-  db.ref('typing/' + username).set(true);
-  sendTyping();
-});
+function setupTypingListener() {
+  db.ref('typing').on('value', (snapshot) => {
+    const typingUsers = snapshot.val() || {};
+    const usersTyping = Object.keys(typingUsers)
+      .filter(username => typingUsers[username] && username !== currentUser);
+    
+    if (usersTyping.length > 0) {
+      typingIndicator.textContent = `${usersTyping.join(', ')} ${usersTyping.length > 1 ? 'are' : 'is'} typing...`;
+    } else {
+      typingIndicator.textContent = '';
+    }
+  });
+}
 
-db.ref('typing').on('value', snapshot => {
-  const typingUsers = snapshot.val() || {};
-  const active = Object.keys(typingUsers).filter(u => typingUsers[u] && u !== username);
-  document.getElementById('typingIndicator').textContent = 
-    active.length ? `${active.join(', ')} are typing...` : '';
-});
+// Helper function to escape HTML
+function escapeHtml(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Make functions available globally
+window.login = login;
+window.logout = logout;
+window.sendMessage = sendMessage;
+window.deleteMessage = deleteMessage;
+window.deleteAllMessages = deleteAllMessages;
+window.banUser = banUser;
+window.banUserFromMessage = banUserFromMessage;
+
+// Initialize the app when loaded
+document.addEventListener('DOMContentLoaded', init);
