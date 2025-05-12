@@ -176,7 +176,7 @@ db.ref('pinned').on('value', snapshot => {
       msg.style.backgroundColor = '';
     }
   });
-});
+});  // Added missing parenthesis
 
 function signOut() {
   firebase.auth().signOut()
