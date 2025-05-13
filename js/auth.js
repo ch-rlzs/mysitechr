@@ -1,6 +1,6 @@
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { db } from './firebase-config.js';
-import { ref, set, onValue, off, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { ref, set, onValue, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 // State variables
 let currentUser = null;
@@ -150,6 +150,20 @@ export async function logout() {
   } catch (error) {
     console.error("Logout error:", error);
   }
-  export { isAdmin };
 }
 
+// Export the isAdmin status checker
+export function checkAdminStatus() {
+  return isAdmin;
+}
+
+// Export current user info
+export function getCurrentUser() {
+  return currentUser;
+}
+
+// Export all necessary functions and variables
+export {
+  isAdmin,
+  currentUser
+};
