@@ -1,4 +1,3 @@
-// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
   authDomain: "chrlzs-chat-645cf.firebaseapp.com",
@@ -10,9 +9,7 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// Export database reference
-export { db };
+export { db, app }; 
