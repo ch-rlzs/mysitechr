@@ -4,30 +4,144 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DedSec Chat</title>
-  <link rel="stylesheet" href="styles.css"/>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      background-color: #000;
+      color: #0f0;
+      font-family: monospace;
+      padding: 20px;
+    }
+    input, button {
+      background: #111;
+      border: 1px solid #0f0;
+      color: #0f0;
+      padding: 8px;
+      margin: 5px;
+    }
+    #chat { max-height: 400px; overflow-y: auto; border: 1px solid #0f0; padding: 10px; margin: 10px 0; }
+    .message { margin-bottom: 5px; }
+    .admin-controls button { margin-left: 10px; }
+  </style>
 </head>
 <body>
-  <div id="login-screen" class="centered">
-    <h1>DedSec Chat</h1>
-    <input type="text" id="username-input" placeholder="Enter a username" />
-    <button onclick="signIn()">Enter Chat</button>
+
+  <h1>DedSec Chat</h1>
+
+  <div id="loginDiv">
+    <input type="text" id="usernameInput" placeholder="Enter your username" />
+    <button onclick="login()">Login</button>
   </div>
 
-  <div id="chat-screen" class="hidden">
-    <header>
-      <span id="current-user"></span>
-      <button onclick="logout()">Logout</button>
-    </header>
-    <div id="chat-box"></div>
-    <form id="message-form">
-      <input type="text" id="message-input" placeholder="Type a message" />
-      <button type="submit">Send</button>
-    </form>
+  <div id="chatApp" style="display:none;">
+    <p>Logged in as: <span id="displayUsername"></span></p>
+    <button onclick="logout()">Logout</button>
+    <div id="chat"></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
-  <script src="main.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let username = localStorage.getItem("username");
+
+    async function login() {
+      const input = document.getElementById("usernameInput");
+      username = input.value.trim();
+      if (!username) return alert("Enter a username.");
+
+      // Check if banned
+      const bannedRef = await db.collection("bannedUsers").doc(username).get();
+      if (bannedRef.exists) {
+        alert("You are banned.");
+        return;
+      }
+
+      await auth.signInAnonymously();
+      localStorage.setItem("username", username);
+      document.getElementById("loginDiv").style.display = "none";
+      document.getElementById("chatApp").style.display = "block";
+      document.getElementById("displayUsername").textContent = username;
+      listenForMessages();
+    }
+
+    function logout() {
+      auth.signOut();
+      localStorage.removeItem("username");
+      location.reload();
+    }
+
+    function sendMessage() {
+      const text = document.getElementById("messageInput").value.trim();
+      if (!text) return;
+      db.collection("messages").add({
+        username: username,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      document.getElementById("messageInput").value = "";
+    }
+
+    function listenForMessages() {
+      db.collection("messages").orderBy("timestamp")
+        .onSnapshot(snapshot => {
+          const chat = document.getElementById("chat");
+          chat.innerHTML = "";
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            messageDiv.textContent = `[${data.username}]: ${data.text}`;
+
+            // Admin controls
+            if (username === "chrlzs") {
+              const delBtn = document.createElement("button");
+              delBtn.textContent = "🗑️";
+              delBtn.onclick = () => db.collection("messages").doc(doc.id).delete();
+
+              const banBtn = document.createElement("button");
+              banBtn.textContent = "🚫";
+              banBtn.onclick = () => db.collection("bannedUsers").doc(data.username).set({ banned: true });
+
+              const unbanBtn = document.createElement("button");
+              unbanBtn.textContent = "✅";
+              unbanBtn.onclick = () => db.collection("bannedUsers").doc(data.username).delete();
+
+              const ctrlDiv = document.createElement("span");
+              ctrlDiv.classList.add("admin-controls");
+              ctrlDiv.appendChild(delBtn);
+              ctrlDiv.appendChild(banBtn);
+              ctrlDiv.appendChild(unbanBtn);
+              messageDiv.appendChild(ctrlDiv);
+            }
+
+            chat.appendChild(messageDiv);
+            chat.scrollTop = chat.scrollHeight;
+          });
+        });
+    }
+
+    // Auto-login if username is stored
+    if (username) {
+      document.getElementById("usernameInput").value = username;
+      login();
+    }
+  </script>
+
 </body>
 </html>
