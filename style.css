@@ -1,0 +1,36 @@
+:root {
+  --primary: #00ffcc;
+  --primary-transparent: #00ffcc33;
+  --background: #0a0a0a;
+  --panel: #111;
+  --danger: #ff3333;
+  --warning: #ffcc00;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--primary);
+  font-family: 'Fira Code', monospace;
+  margin: 0;
+  padding: 10px;
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 200px;
+  background: var(--panel);
+  border-right: 1px solid var(--primary-transparent);
+  padding: 15px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ... (include all other CSS rules from previous version) ... */
