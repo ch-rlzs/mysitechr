@@ -1,5 +1,7 @@
-import { db, currentUser, isAdmin } from './firebase-config.js';
+import { db, isAdmin } from './firebase-config.js';
 import { usersRef } from './auth.js';
+
+import { currentUser } from './state.js';
 
 // DOM Elements
 const chatMessages = document.getElementById('chatMessages');
