@@ -1,5 +1,5 @@
 import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
+import { db } from './firebase-config.js';
 
 // Shared state variables
 export let currentUser = null;
@@ -39,13 +39,24 @@ async function login() {
     return;
   }
 
-  if (username === 'chrlzs' && password !== 'P4ssedHumidPerpendicular27') {
-    alert("Invalid admin password");
-    return;
+  // Admin login flow
+  if (username === 'chrlzs') {
+    if (!password) {
+      alert("Please enter admin password");
+      return;
+    }
+
+    try {
+      const auth = getAuth();
+      await signInWithEmailAndPassword(auth, 'admin@chrlzs.com', password);
+      isAdmin = true;
+    } catch (error) {
+      alert(`Admin login failed: ${error.message}`);
+      return;
+    }
   }
 
   currentUser = username;
-  isAdmin = username === 'chrlzs' && password === 'P4ssedHumidPerpendicular27';
   
   try {
     userIP = await detectIP();
@@ -69,9 +80,15 @@ async function detectIP() {
 function startSession() {
   loginSection.style.display = 'none';
   chatSection.style.display = 'block';
+  
+  // Focus message input after login
+  document.getElementById('messageInput')?.focus();
 }
 
 function logout() {
+  const auth = getAuth();
+  auth.signOut();
+  
   currentUser = null;
   isAdmin = false;
   userIP = 'unknown';
@@ -80,4 +97,5 @@ function logout() {
   chatSection.style.display = 'none';
   usernameInput.value = '';
   adminPassword.value = '';
+  usernameInput.focus();
 }
