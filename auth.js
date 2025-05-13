@@ -1,4 +1,5 @@
 import { db } from './firebase-config.js';
+import { currentUser, isAdmin, userIP } from './state.js';
 
 // Auth Constants
 const ADMIN_USERNAME = 'chrlzs';
