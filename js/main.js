@@ -1,10 +1,12 @@
-import { initAuth } from './auth.js';
+import { initAuth, cleanupAuth } from './auth.js';
 import { initChat } from './chat.js';
-import { initAdmin } from './admin.js';
 
-// Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   initAuth();
   initChat();
-  initAdmin();
+});
+
+// Cleanup when leaving page
+window.addEventListener('beforeunload', () => {
+  cleanupAuth();
 });
