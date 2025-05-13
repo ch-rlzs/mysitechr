@@ -1,108 +1,153 @@
-import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { db } from './firebase-config.js';
+import { ref, set, onValue, off, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-// Shared state variables
-export let currentUser = null;
-export let isAdmin = false;
-export let userIP = 'unknown';
+// State variables
+let currentUser = null;
+let isAdmin = false;
+let usersRef = null;
+let usersListener = null;
+let authListener = null;
 
-// DOM elements
-const loginSection = document.getElementById('loginSection');
-const chatSection = document.getElementById('chatSection');
-const usernameInput = document.getElementById('usernameInput');
-const adminLogin = document.getElementById('adminLogin');
-const adminPassword = document.getElementById('adminPassword');
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
-
-// Initialize auth
+// Initialize auth with presence tracking
 export function initAuth() {
-  setupAuthEventListeners();
-}
-
-function setupAuthEventListeners() {
-  loginBtn.addEventListener('click', login);
-  logoutBtn.addEventListener('click', logout);
-  usernameInput.addEventListener('input', handleUsernameInput);
-}
-
-function handleUsernameInput(e) {
-  adminLogin.style.display = e.target.value === 'chrlzs' ? 'block' : 'none';
-}
-
-async function login() {
-  const username = usernameInput.value.trim();
-  const password = adminPassword.value;
-
-  if (!username) {
-    alert("Please enter a username");
-    return;
-  }
-
-  // Admin login flow
-  if (username === 'chrlzs') {
-    if (!password) {
-      alert("Please enter admin password");
-      return;
-    }
-
-    try {
-      const auth = getAuth();
-      await signInWithEmailAndPassword(auth, 'admin@chrlzs.com', password);
-      isAdmin = true;
-    } catch (error) {
-      alert(`Admin login failed: ${error.message}`);
-      return;
-    }
-  }
-
-  currentUser = username;
-  
-  try {
-    userIP = await detectIP();
-    startSession();
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Login failed");
-  }
-}
-
-async function detectIP() {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip;
-  } catch {
-    return 'unknown';
-  }
-}
-
-function startSession() {
-  loginSection.style.display = 'none';
-  chatSection.style.display = 'block';
-  
-  // Focus message input after login
-  document.getElementById('messageInput')?.focus();
-}
-
-function logout() {
   const auth = getAuth();
-  auth.signOut();
   
-  currentUser = null;
-  isAdmin = false;
-  userIP = 'unknown';
-  
-  loginSection.style.display = 'block';
-  chatSection.style.display = 'none';
-  usernameInput.value = '';
-  adminPassword.value = '';
-  usernameInput.focus();
-  // Update presence status
-  const userStatusRef = ref(db, `users/${currentUser}`);
-  set(userStatusRef, {
-    online: false,
-    lastChanged: Date.now()
+  // Set up auth state listener
+  authListener = onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // User signed in
+      currentUser = user.displayName || user.email.split('@')[0];
+      isAdmin = user.email === 'admin@chrlzs.com';
+      
+      // Update UI
+      updateCurrentUserDisplay();
+      
+      // Set up presence system
+      await setupPresence(user.uid);
+      
+      // Load online users
+      loadOnlineUsers();
+    } else {
+      // User signed out
+      if (currentUser) {
+        await updateUserPresence(false);
+      }
+      currentUser = null;
+      isAdmin = false;
+      updateCurrentUserDisplay();
+    }
   });
 }
+
+// Clean up all listeners
+export function cleanupAuth() {
+  if (usersListener) {
+    off(usersListener);
+    usersListener = null;
+  }
+  if (authListener) {
+    authListener(); // Unsubscribe from auth changes
+    authListener = null;
+  }
+}
+
+// Presence system
+async function setupPresence(uid) {
+  const userStatusRef = ref(db, `users/${uid}`);
+  const statusRef = ref(db, '.info/connected');
+  
+  // Set initial status
+  await set(userStatusRef, {
+    online: true,
+    lastChanged: serverTimestamp(),
+    isAdmin: isAdmin
+  });
+  
+  // Setup disconnect action
+  onDisconnect(userStatusRef).update({
+    online: false,
+    lastChanged: serverTimestamp()
+  });
+  
+  // Monitor connection state
+  onValue(statusRef, (snapshot) => {
+    if (snapshot.val() === false) return;
+    set(userStatusRef, {
+      online: true,
+      lastChanged: serverTimestamp(),
+      isAdmin: isAdmin
+    });
+  });
+}
+
+// Update user presence
+async function updateUserPresence(online) {
+  if (!currentUser) return;
+  const userStatusRef = ref(db, `users/${currentUser}`);
+  await set(userStatusRef, {
+    online: online,
+    lastChanged: serverTimestamp(),
+    isAdmin: isAdmin
+  });
+}
+
+// Load online users
+function loadOnlineUsers() {
+  usersRef = ref(db, 'users');
+  usersListener = onValue(usersRef, (snapshot) => {
+    const users = snapshot.val() || {};
+    const userList = document.getElementById('userList');
+    userList.innerHTML = '';
+    
+    Object.entries(users).forEach(([uid, data]) => {
+      if (data.online) {
+        const userEl = document.createElement('div');
+        userEl.className = 'user-item';
+        userEl.innerHTML = `
+          <span class="user-avatar">${uid.charAt(0).toUpperCase()}</span>
+          ${uid}
+          ${data.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+        `;
+        userList.appendChild(userEl);
+      }
+    });
+  });
+}
+
+// Update current user display
+function updateCurrentUserDisplay() {
+  const currentUserDisplay = document.getElementById('currentUserDisplay');
+  if (currentUser) {
+    currentUserDisplay.innerHTML = `
+      <span style="font-size: 0.8em">
+        Signed in as: <strong>${currentUser}</strong>
+        ${isAdmin ? '<span style="color:var(--danger)"> (Admin)</span>' : ''}
+      </span>
+    `;
+  } else {
+    currentUserDisplay.textContent = '';
+  }
+}
+
+// Login function
+export async function login(email, password) {
+  const auth = getAuth();
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
+  }
+}
+
+// Logout function
+export async function logout() {
+  const auth = getAuth();
+  try {
+    await updateUserPresence(false);
+    await firebaseSignOut(auth);
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
 }
