@@ -1,112 +1,92 @@
+import { getAuth, signInWithEmailAndPassword, signOut as firebaseSignOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { db } from './firebase-config.js';
-import { currentUser, isAdmin } from './auth.js';
-import { ref, onChildAdded, push, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { ref, set, onValue, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-const chatMessages = document.getElementById('chatMessages');
-const messageInput = document.getElementById('messageInput');
+// State variables
+export let currentUser = null;
+export let isAdmin = false;
 
-// Debugging function
-async function checkDatabaseConnection() {
-  try {
-    const testRef = ref(db, 'connection_test');
-    await set(testRef, { test: new Date().toISOString() });
-    const snapshot = await get(testRef);
-    console.log("Database connection test:", snapshot.val());
-    return true;
-  } catch (error) {
-    console.error("Database connection failed:", error);
-    return false;
-  }
-}
+// DOM elements
+const currentUserDisplay = document.getElementById('currentUserDisplay');
+const userList = document.getElementById('userList');
 
-export async function initChat() {
-  console.log("Initializing chat...");
+// Initialize auth
+export function initAuth() {
+  const auth = getAuth();
   
-  // Verify connection first
-  const connected = await checkDatabaseConnection();
-  if (!connected) {
-    alert("Couldn't connect to database");
-    return;
-  }
-
-  loadMessages();
-  setupEventListeners();
-}
-
-function setupEventListeners() {
-  document.getElementById('sendBtn').addEventListener('click', sendMessage);
-  messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-  });
-}
-
-function loadMessages() {
-  console.log("Attempting to load messages...");
-  const messagesRef = ref(db, 'messages');
-
-  onChildAdded(messagesRef, (snapshot) => {
-    console.log("New message detected:", snapshot.key, snapshot.val());
-    if (!snapshot.exists()) {
-      console.warn("Empty message detected");
-      return;
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      // User is signed in
+      currentUser = user.displayName || user.email.split('@')[0];
+      isAdmin = user.email === 'admin@chrlzs.com';
+      
+      // Update UI
+      updateCurrentUserDisplay();
+      await updateUserPresence(true);
+      
+      // Load online users
+      loadOnlineUsers();
+    } else {
+      // User is signed out
+      if (currentUser) {
+        await updateUserPresence(false);
+      }
+      currentUser = null;
+      isAdmin = false;
+      updateCurrentUserDisplay();
     }
-    
-    const message = snapshot.val();
-    displayMessage(message, snapshot.key);
-  }, (error) => {
-    console.error("Message loading failed:", error);
-    alert("Error loading messages");
   });
 }
 
-function displayMessage(message, messageId) {
-  console.log("Displaying message:", messageId);
-  
-  // Handle missing timestamp
-  const timestamp = message.timestamp ? new Date(message.timestamp) : new Date();
-  const timeString = timestamp.toLocaleTimeString();
-
-  const messageElement = document.createElement('div');
-  messageElement.className = 'message';
-  messageElement.dataset.id = messageId;
-  
-  messageElement.innerHTML = `
-    <div class="message-header">
-      <span class="username">${escapeHtml(message.user || 'unknown')}</span>
-      <span class="timestamp">[${timeString}]</span>
-    </div>
-    <div class="message-text">${escapeHtml(message.text || '')}</div>
-  `;
-
-  chatMessages.appendChild(messageElement);
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-async function sendMessage() {
-  const text = messageInput.value.trim();
-  if (!text) return;
-
-  try {
-    console.log("Sending message...");
-    const messagesRef = ref(db, 'messages');
-    await push(messagesRef, {
-      user: currentUser,
-      text: text,
-      timestamp: serverTimestamp()
-    });
-    messageInput.value = '';
-  } catch (error) {
-    console.error("Message send error:", error);
-    alert("Failed to send message");
+function updateCurrentUserDisplay() {
+  if (currentUser) {
+    currentUserDisplay.innerHTML = `
+      <span style="font-size: 0.8em">Signed in as: 
+        <strong>${currentUser}</strong>
+        ${isAdmin ? '<span style="color:var(--danger)"> (Admin)</span>' : ''}
+      </span>
+    `;
+  } else {
+    currentUserDisplay.textContent = '';
   }
 }
 
-// Utility function
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+async function updateUserPresence(online) {
+  if (!currentUser) return;
+  
+  const userStatusRef = ref(db, `users/${currentUser}`);
+  await set(userStatusRef, {
+    online: online,
+    lastChanged: Date.now(),
+    isAdmin: isAdmin
+  });
+}
+
+function loadOnlineUsers() {
+  const usersRef = ref(db, 'users');
+  
+  onValue(usersRef, (snapshot) => {
+    const users = snapshot.val() || {};
+    userList.innerHTML = '';
+    
+    Object.entries(users).forEach(([username, data]) => {
+      if (data.online) {
+        const userEl = document.createElement('div');
+        userEl.className = 'user-item';
+        userEl.style.fontSize = '0.8em'; // Smaller text
+        userEl.innerHTML = `
+          <span class="user-avatar">${username.charAt(0).toUpperCase()}</span>
+          ${username}
+          ${data.isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}
+        `;
+        userList.appendChild(userEl);
+      }
+    });
+  });
+}
+
+// Make sure to clean up listeners when needed
+export function cleanupAuth() {
+  const usersRef = ref(db, 'users');
+  off(usersRef);
 }
