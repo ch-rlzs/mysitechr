@@ -1,5 +1,5 @@
-import { db, isAdmin } from './firebase-config.js';
-import { currentUser } from './auth.js';
+import { db } from './firebase-config.js';
+import { isAdmin } from './state.js';
 
 // DOM Elements
 const adminPanel = document.getElementById('adminPanel');
