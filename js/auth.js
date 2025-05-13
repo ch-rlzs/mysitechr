@@ -98,4 +98,11 @@ function logout() {
   usernameInput.value = '';
   adminPassword.value = '';
   usernameInput.focus();
+  // Update presence status
+  const userStatusRef = ref(db, `users/${currentUser}`);
+  set(userStatusRef, {
+    online: false,
+    lastChanged: Date.now()
+  });
+}
 }
