@@ -1,4 +1,5 @@
-import { db } from './firebase-config.js';
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 
 // Shared state variables
 export let currentUser = null;
