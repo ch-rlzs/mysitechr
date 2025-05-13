@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>DedSec Chat</title>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script defer src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       background-color: #000;
@@ -44,6 +44,7 @@
   </div>
 
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
       authDomain: "chrlzs-chat-645cf.firebaseapp.com",
@@ -55,19 +56,18 @@
       measurementId: "G-5XW702X3TQ"
     };
 
+    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     let currentUser = null;
-    let username = localStorage.getItem("username");
+    let username = localStorage.getItem("username") || "";
 
     async function login() {
-      const input = document.getElementById("usernameInput");
-      username = input.value.trim();
+      username = document.getElementById("usernameInput").value.trim();
       if (!username) return alert("Enter a username.");
 
-      // Check if banned
       const bannedRef = await db.collection("bannedUsers").doc(username).get();
       if (bannedRef.exists) {
         alert("You are banned.");
@@ -110,7 +110,7 @@
             messageDiv.classList.add("message");
             messageDiv.textContent = `[${data.username}]: ${data.text}`;
 
-            // Admin controls
+            // Admin tools
             if (username === "chrlzs") {
               const delBtn = document.createElement("button");
               delBtn.textContent = "🗑️";
@@ -138,11 +138,13 @@
         });
     }
 
-    // Auto-login if username is stored
-    if (username) {
-      document.getElementById("usernameInput").value = username;
-      login();
-    }
+    // Auto-login if username saved
+    window.onload = () => {
+      if (username) {
+        document.getElementById("usernameInput").value = username;
+        login();
+      }
+    };
   </script>
 
 </body>
