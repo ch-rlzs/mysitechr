@@ -1,3 +1,6 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js";
+import { getDatabase } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAgFYlZc9PI95uSEC_iejXEZOerZ8ebO44",
   authDomain: "chrlzs-chat-645cf.firebaseapp.com",
@@ -9,7 +12,8 @@ const firebaseConfig = {
   measurementId: "G-5XW702X3TQ"
 };
 
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-export { db, app }; 
+export { db };
