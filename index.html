@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chrlzs.dev</title>
+  <title>chrlzs.dev</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script type="module">
     // Import Firebase
@@ -11,14 +11,16 @@
     import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
-        apiKey: "AIza...",
-        authDomain: "your-app.firebaseapp.com",
-        databaseURL: "https://your-app.firebaseio.com",
-        projectId: "your-app",
-        storageBucket: "your-app.appspot.com",
-        messagingSenderId: "...",
-        appId: "1:..."
-   };
+        apiKey: "AIzaSyCVMeancUy8l3TBwPUKQZ3wncDPq_8ttfM",
+        authDomain: "chat-36bbf.firebaseapp.com",
+        databaseURL: "https://chat-36bbf-default-rtdb.firebaseio.com", // ✅ This is the missing line
+        projectId: "chat-36bbf",
+        storageBucket: "chat-36bbf.appspot.com",
+        messagingSenderId: "417072795608",
+        appId: "1:417072795608:web:b81fd8082a15a829b22cad",
+        measurementId: "G-W7TM0BPR84"
+};
+
 
 
     const app = initializeApp(firebaseConfig);
