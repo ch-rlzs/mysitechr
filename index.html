@@ -1,137 +1,304 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>chrlzs.dev</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyCVMeancUy8l3TBwPUKQZ3wncDPq_8ttfM",
-        authDomain: "chat-36bbf.firebaseapp.com",
-        databaseURL: "https://chat-36bbf-default-rtdb.europe-west1.firebasedatabase.app", // ✅ This is the missing line
-        projectId: "chat-36bbf",
-        storageBucket: "chat-36bbf.appspot.com",
-        messagingSenderId: "417072795608",
-        appId: "1:417072795608:web:b81fd8082a15a829b22cad",
-        measurementId: "G-W7TM0BPR84"
-};
-
-
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const chatRef = ref(db, 'messages');
-
-    const chatBox = document.getElementById('chatBox');
-
-    const badWords = ['badword1', 'badword2'];
-    let username = localStorage.getItem('username') || '';
-
-    window.setUsername = function () {
-      username = document.getElementById('username').value.trim();
-      if (username) {
-        localStorage.setItem('username', username);
-        alert(`Username set to ${username}`);
-      }
-    }
-
-    function cleanMessage(msg) {
-      let clean = msg;
-      badWords.forEach(word => {
-        const regex = new RegExp(word, 'gi');
-        clean = clean.replace(regex, '****');
-      });
-      return clean;
-    }
-
-    window.sendMessage = function () {
-      const msgInput = document.getElementById('messageInput');
-      const msg = msgInput.value.trim();
-
-      if (!username) {
-        alert('Please set your username first.');
-        return;
-      }
-      if (!msg) return;
-
-      const clean = cleanMessage(msg);
-
-      push(chatRef, {
-        username: username,
-        message: clean,
-        timestamp: Date.now()
-      });
-
-      msgInput.value = '';
-    }
-
-    onChildAdded(chatRef, snapshot => {
-      const data = snapshot.val();
-      const msgElement = document.createElement('div');
-      msgElement.innerText = `${data.username}: ${data.message}`;
-      chatBox.appendChild(msgElement);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    });
-  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Excuse Factory — Instant Alibis</title>
   <style>
-    body {
-      background-color: #0a0a0a;
+    :root{
+      --bg:#0f1724; --card:#0b1220; --accent:#7c3aed; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
     }
-    .status-active { color: limegreen; }
-    .status-paused { color: orange; }
-    .status-completed { color: dodgerblue; }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial; background:linear-gradient(180deg,#071026 0%, #07182a 50%, #081224 100%); color:#e6eef8; -webkit-font-smoothing:antialiased;
+      display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    .wrap{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{background:linear-gradient(135deg,var(--accent),#06b6d4);width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 6px 20px rgba(124,58,237,0.18)}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px}
+    @media(max-width:860px){.grid{grid-template-columns:1fr} .aside{order:2}}
+
+    .card{background:linear-gradient(180deg,var(--card),#071227);padding:18px;border-radius:12px;box-shadow:0 6px 30px rgba(2,6,23,0.6);}
+
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    select,input[type=text]{background:var(--glass);border:1px solid var(--glass-2);padding:10px 12px;border-radius:10px;color:inherit;outline:none}
+    button.btn{background:linear-gradient(90deg,var(--accent),#06b6d4);border:none;padding:10px 14px;border-radius:10px;color:#051025;font-weight:700;cursor:pointer;box-shadow:0 8px 20px rgba(7,9,26,0.5)}
+    button.ghost{background:transparent;border:1px solid var(--glass-2);color:var(--muted);padding:10px 12px;border-radius:10px;cursor:pointer}
+
+    .result{margin-top:8px;padding:22px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));font-size:18px;line-height:1.3;min-height:120px;display:flex;align-items:center;justify-content:center;text-align:center}
+    .small{font-size:13px;color:var(--muted)}
+
+    .aside .meta{display:flex;flex-direction:column;gap:12px}
+    .opts{display:flex;flex-direction:column;gap:8px}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{background:var(--glass);padding:8px 10px;border-radius:999px;border:1px solid var(--glass-2);cursor:pointer}
+
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+
+    .sass{margin-top:12px;color:#ffd7ff;font-weight:600}
+
+    .rating{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:12px}
+    .emoji{font-size:22px;cursor:pointer;user-select:none}
+
+    .confetti{pointer-events:none;position:fixed;inset:0;z-index:30}
+
+    /* Tiny animations */
+    .pulse{animation:pulse 2.2s infinite}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)} }
+
+    .copy{display:inline-flex;align-items:center;gap:8px}
+    .credit{font-size:12px;color:var(--muted);margin-top:8px}
+
   </style>
 </head>
-<body class="text-white font-sans">
-  <header class="flex justify-between items-center p-4 border-b border-gray-800">
-    <h1 class="text-xl font-bold">Chrlzs.dev</h1>
-    <nav class="space-x-4">
-      <a href="#home" class="hover:underline">Home</a>
-      <a href="#projects" class="hover:underline">Projects</a>
-      <a href="#chat" class="hover:underline">Chat Room</a>
-    </nav>
-  </header>
-
-  <main class="p-6">
-    <!-- Home Section -->
-    <section id="home" class="mb-12">
-      <h2 class="text-2xl font-bold mb-2">Welcome</h2>
-      <p>This is my personal site where I showcase my projects and host a live chat room for feedback and fun.</p>
-    </section>
-
-    <!-- Projects Section -->
-    <section id="projects" class="mb-12">
-      <h2 class="text-2xl font-bold mb-4">Projects</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="bg-gray-900 p-4 rounded-xl shadow-lg">
-          <h3 class="text-xl font-semibold">Portfolio</h3>
-          <p class="text-sm text-gray-300">This Site</p>
-          <span class="status-active text-sm">● Active</span>
-        </div>
-        <div class="bg-gray-900 p-4 rounded-xl shadow-lg">
-          <h3 class="text-xl font-semibold">The Feed</h3>
-          <p class="text-sm text-gray-300">Chat away.</p>
-          <span class="status-active text-sm">● Active</span>
-        </div>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">EF</div>
+      <div>
+        <h1>The Excuse Factory</h1>
+        <p class="lead">Instantly generate ridiculous, plausible, or iconic excuses. Use responsibly. Or don't.</p>
       </div>
-    </section>
+    </header>
 
-    <!-- Chat Room Section -->
-    <section id="chat">
-      <h2 class="text-2xl font-bold mb-4">Chat Room</h2>
-      <div class="mb-4">
-        <input id="username" class="bg-gray-800 p-2 rounded text-white" placeholder="Enter your username" />
-        <button onclick="setUsername()" class="bg-green-600 px-3 py-1 rounded ml-2">Set Name</button>
-      </div>
-      <div id="chatBox" class="bg-gray-900 p-4 rounded h-64 overflow-y-scroll mb-4"></div>
-      <input id="messageInput" class="bg-gray-800 p-2 rounded w-3/4" placeholder="Type your message..." />
-      <button onclick="sendMessage()" class="bg-blue-600 px-4 py-2 rounded ml-2">Send</button>
-    </section>
-  </main>
+    <div class="grid">
+      <main class="card">
+        <div class="controls">
+          <select id="tone" title="Tone">
+            <option value="casual">Casual (low-key believable)</option>
+            <option value="dramatic">Dramatic (theatrical chaos)</option>
+            <option value="tech">Techy (blame the Wi‑Fi)</option>
+            <option value="weird">Weird (you do not want to explain)</option>
+            <option value="sassy">Sassy (roast with flair)</option>
+          </select>
+
+          <select id="target">
+            <option value="work">Work / Boss</option>
+            <option value="date">Date / Friend</option>
+            <option value="school">School / Teacher</option>
+            <option value="family">Family</option>
+            <option value="other">Other</option>
+          </select>
+
+          <input id="keyword" type="text" placeholder="Add a word (optional): e.g. 'cat', 'router'" />
+
+          <button class="btn" id="genBtn">Generate</button>
+          <button class="ghost" id="shuffleBtn">Surprise me</button>
+        </div>
+
+        <div class="result" id="result">press <strong>Generate</strong> — let the chaos commence.</div>
+
+        <div class="rating">
+          <div class="small">Rate it:</div>
+          <div class="emoji" data-score="1">😐</div>
+          <div class="emoji" data-score="2">😂</div>
+          <div class="emoji" data-score="3">🔥</div>
+        </div>
+
+        <div class="sass" id="sass">The factory is quiet... for now.</div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+          <button class="ghost" id="copyBtn">Copy excuse</button>
+          <button class="ghost" id="shareBtn">Share (copy link)</button>
+          <div class="credit">Made for vibes ✨</div>
+        </div>
+      </main>
+
+      <aside class="aside card">
+        <div class="meta">
+          <div>
+            <strong>Quick presets</strong>
+            <div class="chips" style="margin-top:8px">
+              <div class="chip" data-preset="late">I'm running late</div>
+              <div class="chip" data-preset="pet">My pet did a thing</div>
+              <div class="chip" data-preset="tech">Tech meltdown</div>
+              <div class="chip" data-preset="family">Family emergency</div>
+              <div class="chip" data-preset="cosmic">Cosmic anomaly</div>
+            </div>
+          </div>
+
+          <div>
+            <strong>Mode</strong>
+            <div class="opts" style="margin-top:8px">
+              <label><input type="checkbox" id="polish" /> Polish (make it sound real)</label>
+              <label><input type="checkbox" id="dramaticExp" /> Add dramatic flourish</label>
+            </div>
+          </div>
+
+          <div>
+            <strong>About</strong>
+            <p class="small">This is free comedy. Don't use to avoid taking responsibility for major stuff. Also — don't microwave metal. Ever.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <footer class="small">Tip: press the emoji after a result to get a sassy follow-up.</footer>
+  </div>
+
+  <canvas class="confetti" id="conf"></canvas>
+
+<script>
+(function(){
+  const genBtn = document.getElementById('genBtn');
+  const shuffleBtn = document.getElementById('shuffleBtn');
+  const result = document.getElementById('result');
+  const toneSel = document.getElementById('tone');
+  const targetSel = document.getElementById('target');
+  const keyword = document.getElementById('keyword');
+  const sass = document.getElementById('sass');
+  const copyBtn = document.getElementById('copyBtn');
+  const shareBtn = document.getElementById('shareBtn');
+  const conf = document.getElementById('conf');
+
+  const presets = document.querySelectorAll('.chip');
+  presets.forEach(p => p.addEventListener('click', ()=>{
+    const k = p.dataset.preset;
+    if(k==='late') keyword.value='traffic';
+    if(k==='pet') keyword.value='cat';
+    if(k==='tech') keyword.value='router';
+    if(k==='family') keyword.value='grandma';
+    if(k==='cosmic') keyword.value='solar flare';
+    genBtn.click();
+  }));
+
+  function rand(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+  const fragments = {
+    casual: [
+      "My alarm betrayed me and I woke up during a toast binge.",
+      "I accidentally answered an important email in comic sans and had to rethink humanity.",
+      "My neighbor's goat stole my shoes and the council is involved.",
+      "I left my keys in the fridge next to the milk. It was very confusing."
+    ],
+    dramatic: [
+      "A thunderstorm of fate struck my commute and I was swallowed by destiny.",
+      "An urgent saga unfolded involving an ex, a raccoon, and a broken saxophone.",
+      "The universe demanded a day off; I negotiated with it and failed."
+    ],
+    tech: [
+      "The router entered witness protection. Signal unreachable.",
+      "I was halfway through a software update and reality froze.",
+      "My calendar synced with an alternate dimension. Times do not line up."
+    ],
+    weird: [
+      "I accidentally summoned a small culinary demon while microwaving a burrito.",
+      "A parade of sentient hedgehogs blocked my door. Very punk.",
+      "My socks formed a union and refused to leave the house."
+    ],
+    sassy: [
+      "I can't come in; my vibe check failed spectacularly.",
+      "I told my manager I'm on a vision quest. I'll send a postcard.",
+      "I'd come, but my standards have standards."
+    ]
+  };
+
+  const closers = [
+    "Can we reschedule? I owe you coffee.",
+    "Please pretend this didn't happen. Thanks.",
+    "Forgive me and I will provide snacks as penance."
+  ];
+
+  function buildExcuse({tone,target,word,polish,dramatic}){
+    let seed = rand(fragments[tone] || fragments['casual']);
+    if(word) seed = seed.replace(/\b(router|cat|traffic|grandma|solar flare)\b/i, word) || (seed + ' — ' + word);
+    // small target tweak
+    if(target==='work') seed += ' (sent from my professional guilt account)';
+    if(target==='date') seed += ' — sorry, this is awkward.';
+    if(polish){ seed = seed.replace(/\bbroken|confused|strange\b/gi, 'temporarily compromised'); }
+    if(dramatic){ seed = seed + ' ' + rand(closers); }
+    return seed;
+  }
+
+  function showSass(score){
+    const map = {
+      '1':'...hmm. Neutral energy. Could be worse.',
+      '2':'Bro, that slaps. Share it with my manager. I dare you.',
+      '3':'Iconic. This will be remembered in group chats forever.'
+    };
+    sass.textContent = map[score] || 'The factory hums.';
+    if(score==3) burstConfetti();
+  }
+
+  document.querySelectorAll('.emoji').forEach(e=>{
+    e.addEventListener('click', ()=> showSass(e.dataset.score));
+  });
+
+  genBtn.addEventListener('click', ()=>{
+    const tone = toneSel.value;
+    const target = targetSel.value;
+    const word = keyword.value.trim();
+    const polish = document.getElementById('polish').checked;
+    const dramatic = document.getElementById('dramaticExp').checked;
+    const txt = buildExcuse({tone,target,word,polish,dramatic});
+    result.textContent = txt;
+    result.classList.add('pulse');
+    setTimeout(()=>result.classList.remove('pulse'),900);
+  });
+
+  shuffleBtn.addEventListener('click', ()=>{
+    toneSel.selectedIndex = Math.floor(Math.random()*toneSel.options.length);
+    targetSel.selectedIndex = Math.floor(Math.random()*targetSel.options.length);
+    keyword.value = ['','cat','router','traffic','alien pizza'][Math.floor(Math.random()*5)];
+    genBtn.click();
+  });
+
+  copyBtn.addEventListener('click', ()=>{
+    const text = result.textContent;
+    if(!text) return;
+    navigator.clipboard.writeText(text).then(()=>{
+      copyBtn.textContent='Copied ✅';
+      setTimeout(()=>copyBtn.textContent='Copy excuse',1500);
+    });
+  });
+
+  shareBtn.addEventListener('click', ()=>{
+    const txt = encodeURIComponent(result.textContent || 'My excuse is shy.');
+    const url = location.origin + location.pathname + '?e=' + txt;
+    navigator.clipboard.writeText(url).then(()=>{
+      shareBtn.textContent='Link copied 🔗';
+      setTimeout(()=>shareBtn.textContent='Share (copy link)',1400);
+    });
+  });
+
+  // handle ?e= share links
+  try{
+    const params = new URLSearchParams(location.search);
+    if(params.get('e')){
+      const decoded = decodeURIComponent(params.get('e'));
+      result.textContent = decoded;
+      sass.textContent = 'Shared excuse — famous already.';
+    }
+  }catch(e){/* ignore */}
+
+  // confetti
+  function burstConfetti(){
+    const c = conf; const ctx = c.getContext('2d');
+    c.width = innerWidth; c.height = innerHeight; let pieces = [];
+    for(let i=0;i<60;i++) pieces.push({x:innerWidth/2,y:innerHeight/3+Math.random()*60, vx:(Math.random()-0.5)*8, vy:Math.random()*-6-2, rot:Math.random()*Math.PI, s:6+Math.random()*8});
+    let t=0;
+    function frame(){
+      t++; ctx.clearRect(0,0,c.width,c.height);
+      pieces.forEach(p=>{
+        p.vy += 0.25; p.x += p.vx; p.y += p.vy; p.rot += 0.07;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = ['#ffd6e0','#bde0fe','#d8f5a2','#ffd8a8'][Math.floor(Math.random()*4)];
+        ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);
+        ctx.restore();
+      });
+      if(t<120) requestAnimationFrame(frame);
+      else ctx.clearRect(0,0,c.width,c.height);
+    }
+    frame();
+  }
+
+})();
+</script>
 </body>
 </html>
